@@ -3,123 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Xtrema V5 - Que si reproduce</title>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12"></script>
+<title>Xtrema V6 - Nativo directo</title>
 <style>
  body{background:#06090e;color:#fff;font-family:sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px}
 .card{background:#0e141d;border:1px solid #ffffff14;border-radius:20px;padding:24px;width:100%;max-width:380px;text-align:center}
  button{width:100%;padding:16px;border-radius:100px;border:none;background:#00d9ff;color:#000;font-weight:900;font-size:18px;margin-top:12px}
- #log{background:#0008;padding:10px;border-radius:10px;margin-top:12px;font-family:monospace;font-size:11px;text-align:left;white-space:pre-wrap;min-height:90px}
+ #log{background:#0008;padding:10px;border-radius:10px;margin-top:12px;font-family:monospace;font-size:11px;text-align:left;white-space:pre-wrap;min-height:80px}
  audio{width:100%;margin-top:12px}
 </style>
 </head>
 <body>
 <div class="card">
-  <h2>Xtrema 101.3 - V5</h2>
-  <p id="status" style="color:#7de8ff">Toca PLAY</p>
+  <h2>Xtrema 101.3 - V6 Nativo</h2>
+  <p id="status" style="color:#7de8ff">Nativo directo, sin hls.js</p>
   <button id="playBtn">▶ PLAY XTREMA</button>
-  <audio id="audio" controls playsinline preload="auto"></audio>
+  <audio id="audio" controls playsinline preload="auto" crossorigin="anonymous"></audio>
   <div id="log">Log...</div>
+  <p style="font-size:11px;color:#64748b;margin-top:10px">Si este no da play, súbelo a tu hosting https:// no lo abras desde Archivos</p>
 </div>
 
 <script>
-const URLS = [
-  "https://d2b5h5wyivfnfl.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8",
-  "https://d2qsan2ut81n2k.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8"
-];
+const URL_VIEJO = "https://d2qsan2ut81n2k.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8";
+const URL_NUEVO = "https://d2b5h5wyivfnfl.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8";
+
 const audio = document.getElementById('audio');
 const statusEl = document.getElementById('status');
 const logEl = document.getElementById('log');
 const playBtn = document.getElementById('playBtn');
 
-let hls = null;
-let urlIndex = 0;
-
 function log(m){
-  console.log(m);
   logEl.textContent = new Date().toLocaleTimeString() + " " + m + "\n" + logEl.textContent;
+  console.log(m);
 }
 
-function play(index){
-  const url = URLS[index];
-  log("Cargando: " + url);
-  statusEl.textContent = "Conectando CDN " + (index+1);
+// Prueba CORS rápido
+fetch(URL_VIEJO).then(r=>{
+  log(`fetch viejo: ${r.status} ${r.ok?'OK':'FALLO'} CORS: ${r.type}`);
+  return r.text();
+}).then(t=>log(`manifest viejo ${t.length} chars, primera linea: ${t.split('\n')[0]}`))
+.catch(e=>log(`fetch viejo fallo por CORS (normal si es file://): ${e.message}`));
 
-  if(hls){ try{hls.destroy()}catch(e){} hls=null; }
-
-  // CONFIG QUE SI REPRODUCE, pero mas estable
-  hls = new Hls({
-    enableWorker: true,
-    lowLatencyMode: false,
-    maxLiveSyncPlaybackRate: 1, // no acelere, eso es lo que suena cortado
-    backBufferLength: 90,
-    maxBufferLength: 90, // antes 30, ahora 90
-    maxMaxBufferLength: 180,
-    maxBufferSize: 0,
-    maxBufferHole: 2, // tolera huecos de 2s
-    highBufferWatchdogPeriod: 1,
-    nudgeOffset: 0.5,
-    nudgeMaxRetry: 15,
-    liveSyncDurationCount: 10, // antes 5, ahora 10 = 20s atras del vivo
-    liveMaxLatencyDurationCount: Infinity,
-    liveDurationInfinity: true,
-    manifestLoadingTimeOut: 20000,
-    fragLoadingTimeOut: 25000,
-    fragLoadingMaxRetry: 10,
-    xhrSetup: xhr => { xhr.withCredentials = false; }
-  });
-
-  hls.loadSource(url);
-  hls.attachMedia(audio);
-
-  hls.on(Hls.Events.MANIFEST_PARSED, (e,data)=>{
-    log(`MANIFEST OK - ${data.levels.length} niveles: ${data.levels.map(l=>Math.round(l.bitrate/1000)+'k').join(', ')}`);
-    // BLOQUEA EN BAJA PARA QUE NO CORTE
-    hls.nextLevel = 0;
-    hls.loadLevel = 0;
-    hls.currentLevel = 0;
-    log("Bloqueado en nivel 0 = " + Math.round(hls.levels[0].bitrate/1000) + "k");
-    statusEl.textContent = "Dando play...";
-    audio.play().then(()=>log("play() OK")).catch(err=>log("play() bloqueado: " + err.message));
-  });
-
-  hls.on(Hls.Events.LEVEL_SWITCHED, (e,d)=>{
-    log(`Nivel cambiado a ${d.level}`);
-  });
-
-  hls.on(Hls.Events.ERROR, (e,data)=>{
-    log(`ERROR ${data.details} fatal:${data.fatal}`);
-    if(!data.fatal) return;
-    if(data.type === 'networkError'){
-      hls.startLoad();
-    } else if(data.type === 'mediaError'){
-      hls.recoverMediaError();
-    } else {
-      if(urlIndex+1 < URLS.length){
-        log("Probando CDN alterno");
-        play(urlIndex+1);
-      }
+playBtn.onclick = async ()=>{
+  try{
+    // Usa el viejo primero, tiene menos cortes
+    audio.src = URL_VIEJO;
+    audio.load();
+    statusEl.textContent = "Conectando viejo CDN...";
+    log("audio.src = viejo CDN");
+    await audio.play();
+    log("play() nativo OK");
+  }catch(e){
+    log(`Nativo viejo fallo: ${e.message} - probando nuevo CDN`);
+    try{
+      audio.src = URL_NUEVO;
+      await audio.play();
+      log("play() nuevo CDN OK");
+    }catch(e2){
+      log(`Ambos fallaron: ${e2.message}`);
+      statusEl.textContent = "Súbelo a https:// para probar";
     }
-  });
-}
-
-playBtn.onclick = ()=>{
-  if(audio.paused){
-    if(!hls){
-      play(0);
-    } else {
-      audio.play().then(()=>log("resume OK")).catch(e=>log(e.message));
-    }
-  } else {
-    audio.pause();
   }
 };
 
-audio.addEventListener('playing', ()=>{ playBtn.textContent="⏸ PAUSA"; statusEl.textContent="EN VIVO - Buffer grande"; log("playing"); });
-audio.addEventListener('waiting', ()=>{ log("waiting - se quedo sin buffer"); statusEl.textContent="Buffering..."; });
-audio.addEventListener('stalled', ()=>{ log("stalled -> startLoad"); if(hls) hls.startLoad(); });
+audio.addEventListener('playing', ()=>{ statusEl.textContent="EN VIVO - Nativo"; playBtn.textContent="⏸ PAUSA"; log("playing - si se corta aqui es del stream"); });
+audio.addEventListener('waiting', ()=>{ log("waiting - buffer bajo"); });
+audio.addEventListener('error', (e)=>{ log(`audio error code ${audio.error?audio.error.code:''}`); });
+audio.addEventListener('stalled', ()=>log("stalled"));
 
-log("Listo - toca PLAY");
+log("V6 listo. Abierto como: " + location.protocol);
+if(location.protocol === 'file:'){
+  log("ALERTA: Estas en file:// por eso da manifestLoadError. Sube este html a tu dominio https:// donde tienes la central");
+}
 </script>
 </body>
 </html>
