@@ -3,128 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Xtrema V4 - Shaka Estable</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
+<title>Xtrema V5 - Que si reproduce</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12"></script>
 <style>
  body{background:#06090e;color:#fff;font-family:sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px}
-.card{background:#0e141d;border:1px solid #ffffff14;border-radius:20px;padding:24px;width:100%;max-width:400px;text-align:center}
-button{width:100%;padding:16px;border-radius:100px;border:none;background:#00d9ff;color:#000;font-weight:900;font-size:18px;cursor:pointer}
-#log{background:#0008;padding:10px;border-radius:10px;margin-top:12px;font-family:monospace;font-size:11px;text-align:left;white-space:pre-wrap;min-height:100px;max-height:200px;overflow:auto}
+.card{background:#0e141d;border:1px solid #ffffff14;border-radius:20px;padding:24px;width:100%;max-width:380px;text-align:center}
+ button{width:100%;padding:16px;border-radius:100px;border:none;background:#00d9ff;color:#000;font-weight:900;font-size:18px;margin-top:12px}
+ #log{background:#0008;padding:10px;border-radius:10px;margin-top:12px;font-family:monospace;font-size:11px;text-align:left;white-space:pre-wrap;min-height:90px}
+ audio{width:100%;margin-top:12px}
 </style>
 </head>
 <body>
 <div class="card">
-  <h2>Xtrema 101.3 - V4 SHAKA</h2>
-  <p id="status" style="color:#7de8ff;font-size:13px">Toca PLAY - Modo 30s delay</p>
-  <button id="playBtn">▶ PLAY SIN CORTES</button>
+  <h2>Xtrema 101.3 - V5</h2>
+  <p id="status" style="color:#7de8ff">Toca PLAY</p>
+  <button id="playBtn">▶ PLAY XTREMA</button>
+  <audio id="audio" controls playsinline preload="auto"></audio>
   <div id="log">Log...</div>
 </div>
-<audio id="audio" playsinline></audio>
 
 <script>
-const URL = "https://d2b5h5wyivfnfl.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8";
+const URLS = [
+  "https://d2b5h5wyivfnfl.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8",
+  "https://d2qsan2ut81n2k.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8"
+];
 const audio = document.getElementById('audio');
 const statusEl = document.getElementById('status');
 const logEl = document.getElementById('log');
 const playBtn = document.getElementById('playBtn');
-let player = null;
-let isPlaying = false;
+
+let hls = null;
+let urlIndex = 0;
 
 function log(m){
   console.log(m);
   logEl.textContent = new Date().toLocaleTimeString() + " " + m + "\n" + logEl.textContent;
 }
 
-async function initShaka(){
-  shaka.polyfill.installAll();
-  if(!shaka.Player.isBrowserSupported()){
-    log("Shaka no soportado, fallback a nativo");
-    audio.src = URL;
-    audio.play();
-    return;
-  }
+function play(index){
+  const url = URLS[index];
+  log("Cargando: " + url);
+  statusEl.textContent = "Conectando CDN " + (index+1);
 
-  player = new shaka.Player(audio);
+  if(hls){ try{hls.destroy()}catch(e){} hls=null; }
 
-  // CONFIGURACION PARA RADIO EN CELULAR - lo mas estable
-  player.configure({
-    streaming: {
-      bufferingGoal: 90, // quiere 90s de buffer
-      rebufferingGoal: 15, // si se queda sin buffer, espera 15s antes de dar play
-      bufferBehind: 30,
-      retryParameters: { maxAttempts: 10, baseDelay: 1000, backoffFactor: 2 },
-      // no intentes estar pegado al vivo, atrasate 30s
-      liveSync: false,
-      inaccurateManifestTolerance: 0,
-      maxDisabledTime: 30,
-    },
-    manifest: {
-      dash: { ignoreMinBufferTime: true },
-      hls: { ignoreMinBufferTime: true }
-    },
-    abr: {
-      enabled: true,
-      defaultBandwidthEstimate: 200000, // empieza bajo
-      switchInterval: 15, // no cambies cada 2s, cambia cada 15s
-      bandwidthUpgradeTarget: 0.7,
-      bandwidthDowngradeTarget: 0.9,
+  // CONFIG QUE SI REPRODUCE, pero mas estable
+  hls = new Hls({
+    enableWorker: true,
+    lowLatencyMode: false,
+    maxLiveSyncPlaybackRate: 1, // no acelere, eso es lo que suena cortado
+    backBufferLength: 90,
+    maxBufferLength: 90, // antes 30, ahora 90
+    maxMaxBufferLength: 180,
+    maxBufferSize: 0,
+    maxBufferHole: 2, // tolera huecos de 2s
+    highBufferWatchdogPeriod: 1,
+    nudgeOffset: 0.5,
+    nudgeMaxRetry: 15,
+    liveSyncDurationCount: 10, // antes 5, ahora 10 = 20s atras del vivo
+    liveMaxLatencyDurationCount: Infinity,
+    liveDurationInfinity: true,
+    manifestLoadingTimeOut: 20000,
+    fragLoadingTimeOut: 25000,
+    fragLoadingMaxRetry: 10,
+    xhrSetup: xhr => { xhr.withCredentials = false; }
+  });
+
+  hls.loadSource(url);
+  hls.attachMedia(audio);
+
+  hls.on(Hls.Events.MANIFEST_PARSED, (e,data)=>{
+    log(`MANIFEST OK - ${data.levels.length} niveles: ${data.levels.map(l=>Math.round(l.bitrate/1000)+'k').join(', ')}`);
+    // BLOQUEA EN BAJA PARA QUE NO CORTE
+    hls.nextLevel = 0;
+    hls.loadLevel = 0;
+    hls.currentLevel = 0;
+    log("Bloqueado en nivel 0 = " + Math.round(hls.levels[0].bitrate/1000) + "k");
+    statusEl.textContent = "Dando play...";
+    audio.play().then(()=>log("play() OK")).catch(err=>log("play() bloqueado: " + err.message));
+  });
+
+  hls.on(Hls.Events.LEVEL_SWITCHED, (e,d)=>{
+    log(`Nivel cambiado a ${d.level}`);
+  });
+
+  hls.on(Hls.Events.ERROR, (e,data)=>{
+    log(`ERROR ${data.details} fatal:${data.fatal}`);
+    if(!data.fatal) return;
+    if(data.type === 'networkError'){
+      hls.startLoad();
+    } else if(data.type === 'mediaError'){
+      hls.recoverMediaError();
+    } else {
+      if(urlIndex+1 < URLS.length){
+        log("Probando CDN alterno");
+        play(urlIndex+1);
+      }
     }
   });
-
-  player.addEventListener('error', e=>{
-    log("Shaka error: " + e.detail.code + " " + e.detail.message);
-  });
-
-  player.addEventListener('buffering', e=>{
-    log(e.detail.buffering? "BUFFERING..." : "Buffer OK");
-    statusEl.textContent = e.detail.buffering? "Buffering..." : "EN VIVO - Buffer grande";
-  });
-
-  try{
-    log("Cargando " + URL);
-    statusEl.textContent = "Cargando con 30s delay...";
-    await player.load(URL);
-    log("Load OK - pistas: " + player.getVariantTracks().length);
-
-    // Forza la calidad mas baja al inicio
-    const tracks = player.getVariantTracks().filter(t=>t.mimeType.includes('audio') || t.type==='variant');
-    if(tracks.length){
-      tracks.sort((a,b)=>a.bandwidth - b.bandwidth);
-      const lowest = tracks[0];
-      log(`Forzando track baja: ${Math.round(lowest.bandwidth/1000)}k id=${lowest.id}`);
-      player.configure({abr: {enabled: false}}); // desactiva ABR despues de cargar
-      player.selectVariantTrack(lowest, true);
-    }
-
-    await audio.play();
-    log("Play OK");
-  }catch(err){
-    log("Error load: " + err.code + " " + err.message);
-    // ultimo fallback nativo puro
-    log("Fallback a audio.src nativo");
-    audio.src = URL;
-    audio.play().catch(e=>log("Nativo tambien fallo: "+e.message));
-  }
 }
 
-playBtn.onclick = async ()=>{
-  if(!isPlaying){
-    if(!player &&!audio.src){
-      await initShaka();
+playBtn.onclick = ()=>{
+  if(audio.paused){
+    if(!hls){
+      play(0);
     } else {
-      audio.play();
+      audio.play().then(()=>log("resume OK")).catch(e=>log(e.message));
     }
   } else {
     audio.pause();
   }
 };
 
-audio.addEventListener('playing', ()=>{ isPlaying=true; playBtn.textContent="⏸ PAUSA"; statusEl.textContent="EN VIVO - 30s delay (estable)"; log("playing"); });
-audio.addEventListener('pause', ()=>{ isPlaying=false; playBtn.textContent="▶ PLAY SIN CORTES"; log("pause"); });
-audio.addEventListener('stalled', ()=>log("stalled"));
-audio.addEventListener('waiting', ()=>log("waiting"));
+audio.addEventListener('playing', ()=>{ playBtn.textContent="⏸ PAUSA"; statusEl.textContent="EN VIVO - Buffer grande"; log("playing"); });
+audio.addEventListener('waiting', ()=>{ log("waiting - se quedo sin buffer"); statusEl.textContent="Buffering..."; });
+audio.addEventListener('stalled', ()=>{ log("stalled -> startLoad"); if(hls) hls.startLoad(); });
 
-log("V4 listo - " + navigator.userAgent.substring(0,70));
+log("Listo - toca PLAY");
 </script>
 </body>
 </html>
