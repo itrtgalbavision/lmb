@@ -3,151 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Xtrema V3 - Estable</title>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
+<title>Xtrema V4 - Shaka Estable</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 <style>
- body{font-family:sans-serif;background:#06090e;color:#fff;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px}
-.card{background:#0e141d;border:1px solid #ffffff14;border-radius:20px;padding:24px;width:100%;max-width:380px;text-align:center}
-button{width:100%;padding:16px;border-radius:100px;border:none;font-weight:900;margin-top:10px;cursor:pointer}
-#playBtn{background:#00d9ff;color:#000;font-size:18px}
-#modeBtn{background:#ffffff10;color:#fff;font-size:12px}
-#status{margin-top:12px;color:#7de8ff;font-size:13px}
-#debug{margin-top:12px;background:#00000060;padding:10px;border-radius:10px;font-family:monospace;font-size:11px;text-align:left;white-space:pre-wrap;min-height:80px}
+ body{background:#06090e;color:#fff;font-family:sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px}
+.card{background:#0e141d;border:1px solid #ffffff14;border-radius:20px;padding:24px;width:100%;max-width:400px;text-align:center}
+button{width:100%;padding:16px;border-radius:100px;border:none;background:#00d9ff;color:#000;font-weight:900;font-size:18px;cursor:pointer}
+#log{background:#0008;padding:10px;border-radius:10px;margin-top:12px;font-family:monospace;font-size:11px;text-align:left;white-space:pre-wrap;min-height:100px;max-height:200px;overflow:auto}
 </style>
 </head>
 <body>
 <div class="card">
-  <h2>Xtrema 101.3 - TEST V3</h2>
-  <div id="status">Listo</div>
-  <button id="playBtn">▶ PLAY ESTABLE</button>
-  <button id="modeBtn">Modo: NATIVO primero (recomendado movil)</button>
-  <div id="debug">Log...</div>
+  <h2>Xtrema 101.3 - V4 SHAKA</h2>
+  <p id="status" style="color:#7de8ff;font-size:13px">Toca PLAY - Modo 30s delay</p>
+  <button id="playBtn">▶ PLAY SIN CORTES</button>
+  <div id="log">Log...</div>
 </div>
-<audio id="audio" playsinline webkit-playsinline preload="auto"></audio>
+<audio id="audio" playsinline></audio>
+
 <script>
-const URLS = [
-  "https://d2b5h5wyivfnfl.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8",
-  "https://d2qsan2ut81n2k.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8"
-];
+const URL = "https://d2b5h5wyivfnfl.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8";
 const audio = document.getElementById('audio');
 const statusEl = document.getElementById('status');
-const debugEl = document.getElementById('debug');
+const logEl = document.getElementById('log');
 const playBtn = document.getElementById('playBtn');
-const modeBtn = document.getElementById('modeBtn');
-
-let hls = null;
-let useNativeFirst = true;
-let locked = true; // bloquea calidad baja
+let player = null;
 let isPlaying = false;
 
 function log(m){
   console.log(m);
-  debugEl.textContent = new Date().toLocaleTimeString() + " - " + m + "\n" + debugEl.textContent;
+  logEl.textContent = new Date().toLocaleTimeString() + " " + m + "\n" + logEl.textContent;
 }
 
-modeBtn.onclick = ()=>{
-  useNativeFirst =!useNativeFirst;
-  modeBtn.textContent = "Modo: " + (useNativeFirst? "NATIVO primero (recomendado movil)" : "HLS.JS Forzado (bloqueado 64k)");
-  log("Cambiado a " + modeBtn.textContent);
-}
+async function initShaka(){
+  shaka.polyfill.installAll();
+  if(!shaka.Player.isBrowserSupported()){
+    log("Shaka no soportado, fallback a nativo");
+    audio.src = URL;
+    audio.play();
+    return;
+  }
 
-function playWithNative(url){
-  log("Probando NATIVO: " + url);
-  statusEl.textContent = "Probando nativo...";
-  if(hls){ try{hls.destroy()}catch(e){} hls=null; }
-  audio.src = url;
-  audio.load();
-  const p = audio.play();
-  if(p) p.catch(e=>{
-    log("Nativo fallo: " + e.message + " -> cambio a hls.js");
-    playWithHls(url);
-  });
-  // Si en 4 seg no da playing, fallback
-  setTimeout(()=>{
-    if(audio.paused &&!isPlaying){
-      log("Nativo no arranco en 4s -> fallback hls.js");
-      playWithHls(url);
+  player = new shaka.Player(audio);
+
+  // CONFIGURACION PARA RADIO EN CELULAR - lo mas estable
+  player.configure({
+    streaming: {
+      bufferingGoal: 90, // quiere 90s de buffer
+      rebufferingGoal: 15, // si se queda sin buffer, espera 15s antes de dar play
+      bufferBehind: 30,
+      retryParameters: { maxAttempts: 10, baseDelay: 1000, backoffFactor: 2 },
+      // no intentes estar pegado al vivo, atrasate 30s
+      liveSync: false,
+      inaccurateManifestTolerance: 0,
+      maxDisabledTime: 30,
+    },
+    manifest: {
+      dash: { ignoreMinBufferTime: true },
+      hls: { ignoreMinBufferTime: true }
+    },
+    abr: {
+      enabled: true,
+      defaultBandwidthEstimate: 200000, // empieza bajo
+      switchInterval: 15, // no cambies cada 2s, cambia cada 15s
+      bandwidthUpgradeTarget: 0.7,
+      bandwidthDowngradeTarget: 0.9,
     }
-  }, 4000);
-}
-
-function playWithHls(url){
-  log("Probando HLS.JS bloqueado en baja");
-  statusEl.textContent = "Conectando hls.js estable...";
-  if(hls){ try{hls.destroy()}catch(e){} hls=null; }
-  audio.removeAttribute('src');
-
-  hls = new Hls({
-    enableWorker: false, // <--- CLAVE para gama media, sin worker
-    lowLatencyMode: false,
-    maxLiveSyncPlaybackRate: 1, // no aceleres el audio, eso suena entrecortado
-    backBufferLength: 90,
-    maxBufferLength: 90,
-    maxMaxBufferLength: 180,
-    maxBufferSize: 0,
-    maxBufferHole: 2,
-    highBufferWatchdogPeriod: 1,
-    nudgeOffset: 0.5,
-    nudgeMaxRetry: 15,
-    liveSyncDurationCount: 10,
-    liveMaxLatencyDurationCount: Infinity,
-    liveDurationInfinity: true,
-    abrEwmaDefaultEstimate: 300000,
-    abrBandWidthFactor: 0.6,
-    abrBandWidthUpFactor: 0.3,
-    maxStarvationDelay: 4,
   });
 
-  hls.loadSource(url);
-  hls.attachMedia(audio);
+  player.addEventListener('error', e=>{
+    log("Shaka error: " + e.detail.code + " " + e.detail.message);
+  });
 
-  hls.on(Hls.Events.MANIFEST_PARSED, (e,data)=>{
-    log(`Manifest OK - ${data.levels.length} calidades: ${data.levels.map(l=>Math.round(l.bitrate/1000)+'k').join(', ')}`);
-    if(locked){
-      // BLOQUEA EN LA MAS BAJA (normalmente 64k)
-      hls.nextLevel = 0;
-      hls.loadLevel = 0;
-      log("BLOQUEADO en nivel 0 = " + Math.round(hls.levels[0].bitrate/1000) + "k para evitar cortes");
+  player.addEventListener('buffering', e=>{
+    log(e.detail.buffering? "BUFFERING..." : "Buffer OK");
+    statusEl.textContent = e.detail.buffering? "Buffering..." : "EN VIVO - Buffer grande";
+  });
+
+  try{
+    log("Cargando " + URL);
+    statusEl.textContent = "Cargando con 30s delay...";
+    await player.load(URL);
+    log("Load OK - pistas: " + player.getVariantTracks().length);
+
+    // Forza la calidad mas baja al inicio
+    const tracks = player.getVariantTracks().filter(t=>t.mimeType.includes('audio') || t.type==='variant');
+    if(tracks.length){
+      tracks.sort((a,b)=>a.bandwidth - b.bandwidth);
+      const lowest = tracks[0];
+      log(`Forzando track baja: ${Math.round(lowest.bandwidth/1000)}k id=${lowest.id}`);
+      player.configure({abr: {enabled: false}}); // desactiva ABR despues de cargar
+      player.selectVariantTrack(lowest, true);
     }
-    audio.play().then(()=>log("Play hls.js OK")).catch(err=>log("Play bloqueado: "+err.message));
-  });
 
-  hls.on(Hls.Events.LEVEL_SWITCHED, (e,data)=>{
-    log(`Cambio a nivel ${data.level} (${Math.round(hls.levels[data.level].bitrate/1000)}k)`);
-  });
-
-  hls.on(Hls.Events.ERROR, (e,data)=>{
-    if(!data.fatal) { log(`WARN ${data.details}`); return; }
-    log(`FATAL ${data.type} ${data.details}`);
-    if(data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
-    if(data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
-  });
+    await audio.play();
+    log("Play OK");
+  }catch(err){
+    log("Error load: " + err.code + " " + err.message);
+    // ultimo fallback nativo puro
+    log("Fallback a audio.src nativo");
+    audio.src = URL;
+    audio.play().catch(e=>log("Nativo tambien fallo: "+e.message));
+  }
 }
 
-playBtn.onclick = ()=>{
+playBtn.onclick = async ()=>{
   if(!isPlaying){
-    const url = URLS[0] + "?t=" + Date.now(); // anti-cache
-    if(useNativeFirst) playWithNative(url);
-    else playWithHls(url);
+    if(!player &&!audio.src){
+      await initShaka();
+    } else {
+      audio.play();
+    }
   } else {
     audio.pause();
   }
 };
 
-audio.addEventListener('playing', ()=>{ isPlaying=true; playBtn.textContent="⏸ PAUSA"; statusEl.textContent="EN VIVO - estable"; log("playing"); });
-audio.addEventListener('pause', ()=>{ isPlaying=false; playBtn.textContent="▶ PLAY ESTABLE"; log("pause"); });
-audio.addEventListener('waiting', ()=>{ statusEl.textContent="Buffering..."; log("waiting - buffer bajo"); });
+audio.addEventListener('playing', ()=>{ isPlaying=true; playBtn.textContent="⏸ PAUSA"; statusEl.textContent="EN VIVO - 30s delay (estable)"; log("playing"); });
+audio.addEventListener('pause', ()=>{ isPlaying=false; playBtn.textContent="▶ PLAY SIN CORTES"; log("pause"); });
+audio.addEventListener('stalled', ()=>log("stalled"));
+audio.addEventListener('waiting', ()=>log("waiting"));
 
-// stats cada 1s
-setInterval(()=>{
-  if(audio.buffered.length){
-    const buf = (audio.buffered.end(0) - audio.currentTime).toFixed(1);
-    const level = hls? ` | nivel ${hls.currentLevel} (${hls.levels[hls.currentLevel]?Math.round(hls.levels[hls.currentLevel].bitrate/1000)+'k':''})` : ' | nativo';
-    statusEl.textContent = (isPlaying?`EN VIVO - Buffer ${buf}s`:'Pausado') + level;
-  }
-}, 1000);
-
-log("V3 listo. Cel: " + navigator.userAgent.slice(0,60));
+log("V4 listo - " + navigator.userAgent.substring(0,70));
 </script>
 </body>
 </html>
