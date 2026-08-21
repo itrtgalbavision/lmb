@@ -105,24 +105,11 @@
 <header class="site-header">
 <div class="header-badges">
 <div class="live-badge"><span class="live-dot"></span>EN VIVO</div>
-
 </div>
 <h1 class="site-title"><span class="thin">CENTRAL DE RADIOS</span><span class="grad">GUATEMALA</span></h1>
 <p class="site-subtitle">• LMB Desing •</p>
 </header>
-<div class="controls-bar">
-<div class="search-wrap">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
-<input id="searchInput" class="search-input" type="search" placeholder="Buscar emisora..." autocomplete="off" />
-</div>
-<div class="view-controls">
-<button class="view-btn active" data-view="grid">Grid</button>
-<button class="view-btn" data-view="list">Lista</button>
-<button class="view-btn" data-view="compact">Compacto</button>
-<button class="fav-toggle" id="favToggle">★ Favoritas</button>
-</div>
-</div>
-<div class="list-meta" id="listMeta"></div>
+
 <main id="stationsContainer"></main>
 </div>
 
@@ -245,7 +232,6 @@ const volIconHigh = document.getElementById('volIconHigh');
 const volIconMuted = document.getElementById('volIconMuted');
 const volPct = document.getElementById('volPct');
 const volumeRange = document.getElementById('volumeRange');
-const onlineCountEl = document.getElementById('onlineCount');
 
 function svgFallback(name, neon) {
   const n = neon || getNeon(0);
@@ -274,7 +260,7 @@ function toggleFav(i, e) {
 }
 
 function getFilteredStations() {
-  const q = searchInput.value.trim().toLowerCase();
+  const q = searchInput && searchInput.value ? searchInput.value.trim().toLowerCase() : '';
   return stations.map((s, i) => ({...s, _i: i, neon: getNeon(i)}))
     .filter(s => {
       const matches = !q || (s.name.toLowerCase().includes(q) || s.freq.toLowerCase().includes(q));
@@ -285,7 +271,9 @@ function getFilteredStations() {
 
 function render() {
   const list = getFilteredStations();
-  listMeta.textContent = `${list.length} emisora${list.length !== 1 ? 's' : ''}${showFavoritesOnly ? ' • Favoritas' : ''}`;
+  if (listMeta) {
+    listMeta.textContent = `${list.length} emisora${list.length !== 1 ? 's' : ''}${showFavoritesOnly ? ' • Favoritas' : ''}`;
+  }
   if (list.length === 0) {
     container.innerHTML = `<div class="empty-state">Sin emisoras.</div>`;
     return;
@@ -313,7 +301,8 @@ function render() {
         <div class="card-name">${s.name}</div>
         <div class="card-freq">${s.freq}</div>`;
       el.addEventListener('click', () => playStation(s._i));
-      el.querySelector('[data-fav]').addEventListener('click', e => toggleFav(s._i, e));
+      const favBtn = el.querySelector('[data-fav]');
+      if(favBtn) favBtn.addEventListener('click', e => toggleFav(s._i, e));
       grid.appendChild(el);
     });
   } else if (viewMode === 'list') {
@@ -333,8 +322,10 @@ function render() {
           <button class="list-play">▶</button>
         </div>`;
       row.addEventListener('click', e => { if (!e.target.closest('[data-fav]')) playStation(s._i); });
-      row.querySelector('.list-play').addEventListener('click', e => { e.stopPropagation(); playStation(s._i); });
-      row.querySelector('[data-fav]').addEventListener('click', e => toggleFav(s._i, e));
+      const playBtn = row.querySelector('.list-play');
+      if(playBtn) playBtn.addEventListener('click', e => { e.stopPropagation(); playStation(s._i); });
+      const favBtn = row.querySelector('[data-fav]');
+      if(favBtn) favBtn.addEventListener('click', e => toggleFav(s._i, e));
       wrap.appendChild(row);
     });
   } else {
@@ -353,16 +344,15 @@ function render() {
   }
 }
 
-// =============== CONFIGURACIÓN HLS OPTIMIZADA PARA MÓVIL ===============
 function getHlsConfig(isMobile) {
   return {
     enableWorker: true,
-    lowLatencyMode: false,               // MUY IMPORTANTE: desactivado
-    backBufferLength: 90,                // mantiene más buffer atrás
-    maxBufferLength: isMobile ? 45 : 20, // buffer más grande en móvil
+    lowLatencyMode: false,
+    backBufferLength: 90,
+    maxBufferLength: isMobile ? 45 : 20,
     maxMaxBufferLength: isMobile ? 90 : 40,
-    maxBufferSize: 60 * 1000 * 1000,     // 60 MB
-    maxBufferHole: isMobile ? 2.5 : 0.8, // más tolerancia a huecos
+    maxBufferSize: 60 * 1000 * 1000,
+    maxBufferHole: isMobile ? 2.5 : 0.8,
     highBufferWatchdogPeriod: 3,
     nudgeOffset: 0.2,
     nudgeMaxRetry: 8,
@@ -381,7 +371,7 @@ function getHlsConfig(isMobile) {
     fragLoadingRetryDelay: 1500,
     startFragPrefetch: true,
     testBandwidth: true,
-    abrEwmaDefaultEstimate: 500000,      // estimación conservadora
+    abrEwmaDefaultEstimate: 500000,
     abrBandWidthFactor: 0.8,
     abrBandWidthUpFactor: 0.7,
     xhrSetup: function(xhr) {
@@ -392,9 +382,7 @@ function getHlsConfig(isMobile) {
 
 function destroyHls() {
   if (hlsInstance) {
-    try {
-      hlsInstance.destroy();
-    } catch (e) {}
+    try { hlsInstance.destroy(); } catch (e) {}
     hlsInstance = null;
   }
   clearTimeout(recoverTimer);
@@ -402,7 +390,6 @@ function destroyHls() {
 
 function playStation(index, urlTry = 0) {
   if (index < 0 || index >= stations.length) return;
-
   const st = stations[index];
   const url = st.urls[urlTry];
   if (!url) {
@@ -410,10 +397,8 @@ function playStation(index, urlTry = 0) {
     playerLiveText.textContent = "Error";
     return;
   }
-
   const neon = getNeon(index);
   currentIndex = index;
-
   playerStationName.textContent = `${st.name} — ${st.freq}`;
   playerLogo.src = st.file;
   playerLogo.alt = st.name;
@@ -421,7 +406,6 @@ function playStation(index, urlTry = 0) {
     this.onerror = null;
     this.src = svgFallback(st.name, neon);
   };
-
   playerBar.style.setProperty('--player-neon', neon.color);
   playerBar.style.setProperty('--player-neon-soft', neon.soft);
   playerBar.style.setProperty('--player-neon-border', neon.border);
@@ -431,12 +415,10 @@ function playStation(index, urlTry = 0) {
   playerLogoWrap.style.borderColor = neon.color;
   playerLiveText.textContent = "Conectando…";
   render();
-
   destroyHls();
   audio.pause();
   audio.removeAttribute('src');
   audio.load();
-
   const tryNextUrl = () => {
     if (urlTry + 1 < st.urls.length) {
       playStation(index, urlTry + 1);
@@ -445,12 +427,8 @@ function playStation(index, urlTry = 0) {
       showToast("Error con " + st.name);
     }
   };
-
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || 
-                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-
-  // iOS → HLS nativo (el mejor en iPhone)
   if (isIOS || audio.canPlayType('application/vnd.apple.mpegurl')) {
     audio.src = url;
     audio.load();
@@ -458,52 +436,25 @@ function playStation(index, urlTry = 0) {
     if (p) p.catch(() => {});
     return;
   }
-
-  // Android / Desktop → hls.js
   if (window.Hls && Hls.isSupported()) {
     hlsInstance = new Hls(getHlsConfig(isMobile));
-
     hlsInstance.loadSource(url);
     hlsInstance.attachMedia(audio);
-
     hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
       const p = audio.play();
       if (p) p.catch(() => {});
     });
-
     hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-      if (!data.fatal) {
-        // errores no fatales → solo logueamos
-        return;
-      }
-
-      console.warn('HLS fatal error:', data.type, data.details);
-
-      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-        // reintentar carga
-        hlsInstance.startLoad();
-        return;
-      }
-
-      if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-        // recuperar error de media
-        hlsInstance.recoverMediaError();
-        return;
-      }
-
-      // error irrecuperable → probar siguiente URL
+      if (!data.fatal) return;
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) { hlsInstance.startLoad(); return; }
+      if (data.type === Hls.ErrorTypes.MEDIA_ERROR) { hlsInstance.recoverMediaError(); return; }
       destroyHls();
       tryNextUrl();
     });
-
-    // recuperación extra cuando se queda colgado
     audio.addEventListener('stalled', onStalled);
     audio.addEventListener('waiting', onWaiting);
-
     return;
   }
-
-  // fallback final
   audio.src = url;
   audio.load();
   audio.play().catch(() => {});
@@ -514,100 +465,48 @@ function onStalled() {
   playerLiveText.textContent = "Reconectando…";
   clearTimeout(recoverTimer);
   recoverTimer = setTimeout(() => {
-    if (hlsInstance) {
-      try { hlsInstance.startLoad(); } catch(e) {}
-    }
+    if (hlsInstance) { try { hlsInstance.startLoad(); } catch(e) {} }
   }, 1800);
 }
-
 function onWaiting() {
   if (!isPlaying) return;
   playerLiveText.textContent = "Cargando…";
 }
-
 function togglePlay() {
-  if (currentIndex === -1) {
-    playStation(0);
-    return;
-  }
-  if (audio.paused) {
-    audio.play().catch(() => {});
-  } else {
-    audio.pause();
-  }
+  if (currentIndex === -1) { playStation(0); return; }
+  if (audio.paused) { audio.play().catch(() => {}); } else { audio.pause(); }
 }
-
 function nextStation() {
   if (currentIndex === -1) { playStation(0); return; }
   playStation((currentIndex + 1) % stations.length);
 }
-
 function prevStation() {
   if (currentIndex === -1) { playStation(0); return; }
   playStation((currentIndex - 1 + stations.length) % stations.length);
 }
-
 function setVolume(v) {
   v = Math.max(0, Math.min(1, v));
   audio.volume = v;
-  volumeRange.value = v;
+  if(volumeRange) volumeRange.value = v;
   localStorage.setItem('crg_vol', v);
-  volumeRange.style.setProperty('--vol-p', (v * 100) + '%');
-  volPct.textContent = Math.round(v * 100) + '%';
+  if(volumeRange) volumeRange.style.setProperty('--vol-p', (v * 100) + '%');
+  if(volPct) volPct.textContent = Math.round(v * 100) + '%';
   if (v === 0) {
-    volIconHigh.classList.add('hidden');
-    volIconMuted.classList.remove('hidden');
-    volIconBtn.classList.add('muted');
+    if(volIconHigh) volIconHigh.classList.add('hidden');
+    if(volIconMuted) volIconMuted.classList.remove('hidden');
+    if(volIconBtn) volIconBtn.classList.add('muted');
   } else {
-    volIconHigh.classList.remove('hidden');
-    volIconMuted.classList.add('hidden');
-    volIconBtn.classList.remove('muted');
+    if(volIconHigh) volIconHigh.classList.remove('hidden');
+    if(volIconMuted) volIconMuted.classList.add('hidden');
+    if(volIconBtn) volIconBtn.classList.remove('muted');
   }
 }
-
-volIconBtn.addEventListener('click', () => {
-  if (audio.volume > 0) {
-    prevVol = audio.volume;
-    setVolume(0);
-  } else {
-    setVolume(prevVol || 0.8);
-  }
-});
-
-// Contador online simulado
-let onlineBase = 0;
-function initOnlineCounter() {
-  const hour = new Date().getHours();
-  let base = 180;
-  if (hour >= 7 && hour <= 9) base = 280;
-  else if (hour >= 12 && hour <= 14) base = 320;
-  else if (hour >= 17 && hour <= 21) base = 380;
-  else if (hour >= 22 || hour <= 5) base = 140;
-  onlineBase = base + Math.floor(Math.random() * 60) - 10;
-  updateOnlineDisplay();
-  setInterval(() => {
-    const delta = Math.floor(Math.random() * 7) - 2;
-    onlineBase = Math.max(65, onlineBase + delta);
-    updateOnlineDisplay(true);
-  }, 3200);
-  setInterval(() => {
-    if (Math.random() > 0.7) {
-      onlineBase += Math.floor(Math.random() * 6) + 1;
-      updateOnlineDisplay(true);
-    }
-  }, 8000);
+if(volIconBtn){
+  volIconBtn.addEventListener('click', () => {
+    if (audio.volume > 0) { prevVol = audio.volume; setVolume(0); } else { setVolume(prevVol || 0.8); }
+  });
 }
 
-function updateOnlineDisplay(animate) {
-  if (!onlineCountEl) return;
-  onlineCountEl.textContent = onlineBase.toLocaleString('es-GT');
-  if (animate) {
-    onlineCountEl.classList.add('bump');
-    setTimeout(() => onlineCountEl.classList.remove('bump'), 250);
-  }
-}
-
-// Eventos de audio
 audio.addEventListener('play', () => {
   isPlaying = true;
   playerBar.classList.add('playing');
@@ -616,7 +515,6 @@ audio.addEventListener('play', () => {
   playerLiveText.textContent = "EN VIVO";
   render();
 });
-
 audio.addEventListener('pause', () => {
   isPlaying = false;
   playerBar.classList.remove('playing');
@@ -625,16 +523,13 @@ audio.addEventListener('pause', () => {
   playerLiveText.textContent = currentIndex >= 0 ? "Pausado" : "En espera";
   render();
 });
-
-audio.addEventListener('playing', () => {
-  playerLiveText.textContent = "EN VIVO";
-});
-
+audio.addEventListener('playing', () => { playerLiveText.textContent = "EN VIVO"; });
 document.getElementById('playPauseBtn').addEventListener('click', togglePlay);
 document.getElementById('nextBtn').addEventListener('click', nextStation);
 document.getElementById('prevBtn').addEventListener('click', prevStation);
-document.getElementById('volumeRange').addEventListener('input', e => setVolume(parseFloat(e.target.value)));
-searchInput.addEventListener('input', render);
+const volRangeEl = document.getElementById('volumeRange');
+if(volRangeEl){ volRangeEl.addEventListener('input', e => setVolume(parseFloat(e.target.value))); }
+if(searchInput){ searchInput.addEventListener('input', render); }
 
 document.querySelectorAll('.view-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -644,27 +539,22 @@ document.querySelectorAll('.view-btn').forEach(btn => {
     render();
   });
 });
-
-document.getElementById('favToggle').addEventListener('click', function() {
-  showFavoritesOnly = !showFavoritesOnly;
-  this.classList.toggle('on', showFavoritesOnly);
-  render();
-});
-
+const favToggle = document.getElementById('favToggle');
+if(favToggle){
+  favToggle.addEventListener('click', function() {
+    showFavoritesOnly = !showFavoritesOnly;
+    this.classList.toggle('on', showFavoritesOnly);
+    render();
+  });
+}
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
-    e.preventDefault();
-    togglePlay();
-  }
+  if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); togglePlay(); }
 });
-
 (function init() {
   const v = localStorage.getItem('crg_vol');
-  if (v !== null) setVolume(parseFloat(v));
-  else setVolume(1.0);
+  if (v !== null) setVolume(parseFloat(v)); else setVolume(1.0);
   playerLogo.src = svgFallback('CRG', getNeon(0));
   render();
-  initOnlineCounter();
 })();
 </script>
 </body>
