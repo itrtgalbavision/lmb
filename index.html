@@ -3,36 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Test 1 Radio - Fix Mobile</title>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+<title>Test Xtrema - Fix Mobile</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
 <style>
- body{font-family:Inter,sans-serif;background:#06090e;color:#fff;display:grid;place-items:center;min-height:100vh;margin:0}
-.card{background:#0e141d;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:28px;text-align:center;width:90%;max-width:360px}
-.logo{width:80px;height:80px;background:#000;border-radius:14px;display:grid;place-items:center;margin:0 auto 14px;border:1px solid #00d9ff}
+ body{font-family:Inter,sans-serif;background:#06090e;color:#fff;display:grid;place-items:center;min-height:100vh;margin:0;padding:20px}
+.card{background:#0e141d;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:28px;text-align:center;width:100%;max-width:360px}
+.logo{width:90px;height:90px;background:#000;border-radius:14px;display:grid;place-items:center;margin:0 auto 14px;border:2px solid #00d9ff;box-shadow:0 0 20px rgba(0,217,255,0.3)}
 .logo img{max-width:80%;max-height:80%}
- button{width:100%;padding:14px;border-radius:100px;border:none;background:#00d9ff;color:#000;font-weight:900;font-size:16px;margin-top:14px}
- #debug{font-size:11px;color:#94a3b8;margin-top:12px;font-family:monospace}
+ button{width:100%;padding:16px;border-radius:100px;border:none;background:#00d9ff;color:#000;font-weight:900;font-size:16px;margin-top:14px;cursor:pointer}
+ button:active{transform:scale(0.98)}
+ #status{color:#7de8ff;font-size:13px;margin-top:10px;min-height:20px}
+ #debug{font-size:11px;color:#94a3b8;margin-top:12px;font-family:monospace;background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;text-align:left;white-space:pre-wrap}
 </style>
 </head>
 <body>
 <div class="card">
-  <div class="logo"><img id="logo" src="galaxia.png" onerror="this.src='https://via.placeholder.com/80'"></div>
-  <h2 id="name">Galaxia 88.5 FM</h2>
-  <p id="status" style="color:#7de8ff;font-size:13px">Listo para probar</p>
+  <div class="logo"><img id="logo" src="xtrema.png" alt="Xtrema"></div>
+  <h2>Xtrema 101.3 FM</h2>
+  <div id="status">Toca PLAY</div>
   <button id="playBtn">▶ PLAY</button>
-  <div id="debug">Buffer: -- | Latencia: --</div>
+  <div id="debug">Esperando...</div>
 </div>
 
-<audio id="audio" preload="auto" playsinline crossorigin="anonymous"></audio>
+<audio id="audio" playsinline webkit-playsinline preload="auto"></audio>
 
 <script>
-const TEST_STATION = {
-  name: "Galaxia",
-  file: "galaxia.png",
-  // Cambia el ID aquí para probar otra radio
+const XTREMA = {
+  name: "Xtrema",
+  id: "c2cce928-c69c-45d5-bd0a-5a5eba167a0d",
   urls: [
-    "https://d2b5h5wyivfnfl.cloudfront.net/live/406d6243-a8fc-4215-aca0-ffd43aac2bf3/ts:abr.m3u8",
-    "https://d2qsan2ut81n2k.cloudfront.net/live/406d6243-a8fc-4215-aca0-ffd43aac2bf3/ts:abr.m3u8"
+    "https://d2b5h5wyivfnfl.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8",
+    "https://d2qsan2ut81n2k.cloudfront.net/live/c2cce928-c69c-45d5-bd0a-5a5eba167a0d/ts:abr.m3u8"
   ]
 };
 
@@ -40,11 +41,17 @@ const audio = document.getElementById('audio');
 const statusEl = document.getElementById('status');
 const debugEl = document.getElementById('debug');
 const playBtn = document.getElementById('playBtn');
+
 let hls = null;
-let currentUrlIndex = 0;
+let urlIndex = 0;
 let isPlaying = false;
 
-function getMobileHlsConfig(){
+function log(msg){
+  console.log(msg);
+  debugEl.textContent = msg + "\n" + debugEl.textContent;
+}
+
+function getHlsConfig(){
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   return {
     enableWorker: true,
@@ -52,121 +59,125 @@ function getMobileHlsConfig(){
     backBufferLength: 90,
     maxBufferLength: isMobile? 60 : 30,
     maxMaxBufferLength: 120,
-    maxBufferSize: 0, // ilimitado para audio, evita que corte por tamaño
-    maxBufferHole: 1.5, // tolera huecos de 1.5s sin re-buffer
+    maxBufferSize: 0,
+    maxBufferHole: 1.5,
     highBufferWatchdogPeriod: 1,
     nudgeOffset: 0.2,
     nudgeMaxRetry: 10,
-    liveSyncDurationCount: 6, // antes tenias 3-5, muy agresivo
-    liveMaxLatencyDurationCount: Infinity, // no intentes alcanzar el vivo
+    liveSyncDurationCount: 6,
+    liveMaxLatencyDurationCount: 30,
     liveDurationInfinity: true,
-    abrEwmaDefaultEstimate: 600000,
-    abrBandWidthFactor: 0.8,
-    abrBandWidthUpFactor: 0.7,
-    startLevel: 0, // empieza en la calidad más baja, sin cortes
-    capLevelToPlayerSize: false,
-    manifestLoadingTimeOut: 15000,
+    abrEwmaDefaultEstimate: 500000,
+    startLevel: 0, // empieza en bitrate bajo para no entrecortar
     manifestLoadingMaxRetry: 5,
-    levelLoadingTimeOut: 15000,
-    fragLoadingTimeOut: 25000,
     fragLoadingMaxRetry: 8,
-    fragLoadingRetryDelay: 1000,
   };
 }
 
-function play(url){
-  const finalUrl = url || TEST_STATION.urls[currentUrlIndex];
-  statusEl.textContent = "Conectando: " + finalUrl.split('/')[2];
+function playUrl(index){
+  const url = XTREMA.urls[index];
+  if(!url){ statusEl.textContent="Sin conexión"; return; }
 
-  if(hls){ try{hls.destroy()}catch(e){} hls=null; }
+  urlIndex = index;
+  statusEl.textContent = "Conectando CDN " + (index+1) + "...";
+  log("Probando: " + url);
+
+  if(hls){ try{ hls.destroy(); }catch(e){} hls=null; }
+  audio.pause();
+  audio.removeAttribute('src');
 
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const canNative = audio.canPlayType('application/vnd.apple.mpegurl');
 
-  // iOS - Nativo es SIEMPRE más estable
-  if(isIOS || canNative){
-    console.log("Usando nativo");
-    audio.src = finalUrl;
+  // iOS = Nativo SI o SI
+  if(isIOS){
+    log("iOS detectado -> nativo");
+    audio.src = url;
     audio.load();
-    audio.play().catch(e=>{ statusEl.textContent = "Toca PLAY de nuevo (iOS bloquea autoplay)"; });
-    return;
+    return audio.play().then(()=>log("Play nativo OK")).catch(e=>log("Error play nativo: "+e.message));
   }
 
-  // Android / PC - HLS.js con fix
+  // Android / PC = hls.js
   if(Hls.isSupported()){
-    hls = new Hls(getMobileHlsConfig());
-    hls.loadSource(finalUrl);
+    log("Usando hls.js " + Hls.version);
+    hls = new Hls(getHlsConfig());
+    hls.loadSource(url);
     hls.attachMedia(audio);
 
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      console.log("Manifest ok, levels:", hls.levels.length);
-      audio.play().catch(()=>{});
+    hls.on(Hls.Events.MANIFEST_PARSED, ()=>{
+      log("MANIFEST_PARSED - levels: " + hls.levels.length);
+      statusEl.textContent = "Manifest OK, dando play...";
+      audio.play().then(()=>{
+        log("Play OK");
+      }).catch(e=>{
+        log("Play bloqueado: " + e.message + " - toca de nuevo");
+        statusEl.textContent = "Toca PLAY de nuevo";
+      });
     });
 
-    hls.on(Hls.Events.ERROR, (event, data) => {
-      console.warn("HLS Error", data.type, data.details, data.fatal);
+    hls.on(Hls.Events.ERROR, (ev, data)=>{
+      log(`ERROR ${data.type} / ${data.details} fatal:${data.fatal}`);
       if(!data.fatal) return;
 
       if(data.type === Hls.ErrorTypes.NETWORK_ERROR){
-        statusEl.textContent = "Reconectando red...";
+        statusEl.textContent = "Error red, reintentando...";
         hls.startLoad();
       } else if(data.type === Hls.ErrorTypes.MEDIA_ERROR){
         statusEl.textContent = "Recuperando audio...";
         hls.recoverMediaError();
       } else {
-        // Fatal real, probamos el otro CDN
-        if(currentUrlIndex + 1 < TEST_STATION.urls.length){
-          currentUrlIndex++;
-          statusEl.textContent = "Probando CDN alterno...";
-          play(TEST_STATION.urls[currentUrlIndex]);
+        // Prueba siguiente CDN
+        if(urlIndex + 1 < XTREMA.urls.length){
+          log("Probando siguiente CDN");
+          playUrl(urlIndex+1);
         } else {
-          statusEl.textContent = "Error de señal";
+          statusEl.textContent = "Error fatal de señal";
         }
       }
     });
 
   } else {
-    audio.src = finalUrl;
+    log("Hls no soportado, fallback nativo");
+    audio.src = url;
     audio.play();
   }
 }
 
-// Eventos del <audio> para celular
-audio.addEventListener('playing', ()=>{ isPlaying=true; playBtn.textContent="⏸ PAUSA"; statusEl.textContent="EN VIVO • Sonando"; });
-audio.addEventListener('pause', ()=>{ isPlaying=false; playBtn.textContent="▶ PLAY"; statusEl.textContent="Pausado"; });
-audio.addEventListener('waiting', ()=>{ statusEl.textContent="Buffering..."; });
-audio.addEventListener('stalled', ()=>{
-  console.log("Stalled detectado, forzando carga");
-  if(hls) hls.startLoad();
+audio.addEventListener('playing', ()=>{
+  isPlaying = true;
+  playBtn.textContent = "⏸ PAUSA";
+  statusEl.textContent = "EN VIVO - Xtrema sonando";
+  log("EVENTO: playing");
 });
-
-// Si el usuario bloquea la pantalla y vuelve, reanuda
-document.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState === 'visible' && isPlaying && audio.paused){
-    audio.play().catch(()=>{});
-  }
+audio.addEventListener('pause', ()=>{
+  isPlaying = false;
+  playBtn.textContent = "▶ PLAY";
+  log("EVENTO: pause");
 });
+audio.addEventListener('waiting', ()=>{ statusEl.textContent="Buffering..."; log("EVENTO: waiting"); });
+audio.addEventListener('stalled', ()=>{ log("EVENTO: stalled -> startLoad()"); if(hls) hls.startLoad(); });
 
 playBtn.addEventListener('click', ()=>{
   if(!isPlaying){
-    if(!audio.src) play();
-    else audio.play();
+    if(!audio.src &&!hls){
+      playUrl(0);
+    } else {
+      audio.play().catch(e=>log("Error resume: "+e.message));
+    }
   } else {
     audio.pause();
   }
 });
 
-// Debug de buffer cada segundo
+// Mostrar buffer cada segundo
 setInterval(()=>{
-  if(audio.buffered.length){
-    const bufferedEnd = audio.buffered.end(audio.buffered.length-1);
-    const current = audio.currentTime;
-    const buf = (bufferedEnd - current).toFixed(1);
-    const latency = hls? (hls.liveSyncPosition? (bufferedEnd - hls.liveSyncPosition).toFixed(1) : '--') : '--';
-    debugEl.textContent = `Buffer: ${buf}s | Estado: ${statusEl.textContent}`;
+  if(audio.buffered.length>0){
+    const end = audio.buffered.end(audio.buffered.length-1);
+    const buf = (end - audio.currentTime).toFixed(1);
+    statusEl.textContent = isPlaying? `EN VIVO - Buffer ${buf}s` : statusEl.textContent;
   }
 }, 1000);
 
+log("Listo. UserAgent: " + navigator.userAgent);
 </script>
 </body>
 </html>
