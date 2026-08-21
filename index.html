@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Central Radios — GT con nuevos m3u8</title>
+<title>Central de Radios — GT</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12"></script>
 <style>
@@ -104,10 +104,10 @@
 <div class="wrap">
 <header class="site-header">
 <div class="header-badges">
-<div class="live-badge"><span class="live-dot"></span>EN VIVO • NUEVOS m3u8</div>
+<div class="live-badge"><span class="live-dot"></span>EN VIVO</div>
 <div class="online-counter"><span class="online-dot"></span><span id="onlineCount">0</span> en línea</div>
 </div>
-<h1 class="site-title"><span class="thin">CENTRAL DE RADIOS</span><span class="grad">GUATEMALA</span></h1><p class="site-subtitle">LMB Desing • <span id="onlineSubtitle">0 personas escuchando ahora</span> • 6 radios con IP 190.56.85.14</p></header>
+<h1 class="site-title"><span class="thin">CENTRAL DE RADIOS</span><span class="grad">GUATEMALA</span></h1><p class="site-subtitle">• LMB Desing • </span></p></header>
 <div class="controls-bar"><div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg><input id="searchInput" class="search-input" type="search" placeholder="Buscar emisora..." autocomplete="off" /></div><div class="view-controls"><button class="view-btn active" data-view="grid">Grid</button><button class="view-btn" data-view="list">Lista</button><button class="view-btn" data-view="compact">Compacto</button><button class="fav-toggle" id="favToggle">★ Favoritas</button></div></div>
 <div class="list-meta" id="listMeta"></div><main id="stationsContainer"></main>
 </div>
@@ -147,17 +147,6 @@
 <div class="toast" id="toast"></div>
 <script>
 const CDN_NUEVO="https://d2b5h5wyivfnfl.cloudfront.net";const CDN_VIEJO="https://d2qsan2ut81n2k.cloudfront.net";const SONORA_CUSTOM="https://d1iowt63cq06qa.cloudfront.net/medialist_14854753276708185244_hls.m3u8";
-
-// NUEVOS m3u8 QUE PASASTE - SOLO ESAS 6
-const NEW_STREAMS = {
-  "Xtrema": "http://190.56.85.14:8081/xtrema/stream_abr/playlist.m3u8",
-  "La Marca": "http://190.56.85.14:8081/lamarca/stream_abr/playlist.m3u8",
-  "Joya": "http://190.56.85.14:8081/joya/stream_abr/playlist.m3u8",
-  "Alfa": "http://190.56.85.14:8081/alfa/stream_abr/playlist.m3u8",
-  "Galaxia": "http://190.56.85.14:8081/galaxia/stream_abr/playlist.m3u8",
-  "Tropicálida": "http://190.56.85.14:8081/tropicalida/stream_abr/playlist.m3u8"
-};
-
 const NEON_PALETTE=[
  {color:'#00d9ff',border:'rgba(0,217,255,0.28)',soft:'rgba(0,217,255,0.12)',glow:'rgba(0,217,255,0.5)',bg:'rgba(0,217,255,0.14)',bg2:'rgba(0,217,255,0.06)'},
  {color:'#ff4dbe',border:'rgba(255,77,190,0.28)',soft:'rgba(255,77,190,0.12)',glow:'rgba(255,77,190,0.5)',bg:'rgba(255,77,190,0.13)',bg2:'rgba(255,77,190,0.05)'},
@@ -167,33 +156,7 @@ const NEON_PALETTE=[
  {color:'#b07cff',border:'rgba(176,124,255,0.28)',soft:'rgba(176,124,255,0.12)',glow:'rgba(176,124,255,0.45)',bg:'rgba(176,124,255,0.12)',bg2:'rgba(176,124,255,0.05)'},
 ];
 function getNeon(i){return NEON_PALETTE[i%NEON_PALETTE.length]}
-
-const baseStations=[
-  {name:"Xtrema",freq:"101.3 FM",file:"xtrema.png",id:"c2cce928-c69c-45d5-bd0a-5a5eba167a0d"},
-  {name:"Galaxia",freq:"88.5 FM",file:"galaxia.png",id:"406d6243-a8fc-4215-aca0-ffd43aac2bf3"},
-  {name:"Tropicálida",freq:"104.9 FM",file:"tropicalida.png",id:"67aeb080-68fa-4197-89f6-c8bb70f9a395"},
-  {name:"Éxitos",freq:"90.9 FM",file:"exitos.png",id:"ca11fca0-0da4-4198-83bd-b50e5607d6f8"},
-  {name:"Joya",freq:"92.9 FM",file:"joya.png",id:"e33ed625-2624-4334-a625-a53a70d95791"},
-  {name:"Alfa",freq:"97.3 FM",file:"alfa.png",id:"3943e598-9843-4784-9388-80e97aa3674b"},
-  {name:"Ranchera",freq:"95.7 FM",file:"ranchera.png",id:"a4e3175d-fa7e-4d4b-979f-e7f875468260"},
-  {name:"La Marca",freq:"94.1 FM",file:"lamarca.png",id:"53ee315d-206f-4271-994b-4c1927ae338b"},
-  {name:"Fiesta",freq:"103.7 FM",file:"fiesta.png",id:"9c2d6264-2009-49a8-a501-848a7bae1051"},
-  {name:"Sonora",freq:"96.9 FM",file:"sonora.png",id:"8e7a8a5b-a2db-4323-8397-46c17f4573ac",customUrl:SONORA_CUSTOM},
-  {name:"Éxitos Xela",freq:"107.1 FM",file:"exitosx.png",id:"ef0c82f1-e446-4093-8455-3a144ca2e171"},
-  {name:"Flix Xela",freq:"93.9 FM",file:"fixx.png",id:"c2af032e-3e29-4551-a757-e4f3d349386c"}
-];
-
-const stations = baseStations.map(s=>{
-  if(NEW_STREAMS[s.name]){
-    // SOLO las 6 que pediste usan el IP nuevo
-    return {...s, urls:[NEW_STREAMS[s.name]]};
-  }
-  if(s.customUrl){
-    return {...s, urls:[s.customUrl,`${CDN_NUEVO}/live/${s.id}/ts:abr.m3u8`,`${CDN_VIEJO}/live/${s.id}/ts:abr.m3u8`]};
-  }
-  return {...s, urls:[`${CDN_NUEVO}/live/${s.id}/ts:abr.m3u8`,`${CDN_VIEJO}/live/${s.id}/ts:abr.m3u8`]};
-});
-
+const stations=[{name:"Xtrema",freq:"101.3 FM",file:"xtrema.png",id:"c2cce928-c69c-45d5-bd0a-5a5eba167a0d"},{name:"Galaxia",freq:"88.5 FM",file:"galaxia.png",id:"406d6243-a8fc-4215-aca0-ffd43aac2bf3"},{name:"Tropicálida",freq:"104.9 FM",file:"tropicalida.png",id:"67aeb080-68fa-4197-89f6-c8bb70f9a395"},{name:"Éxitos",freq:"90.9 FM",file:"exitos.png",id:"ca11fca0-0da4-4198-83bd-b50e5607d6f8"},{name:"Joya",freq:"92.9 FM",file:"joya.png",id:"e33ed625-2624-4334-a625-a53a70d95791"},{name:"Alfa",freq:"97.3 FM",file:"alfa.png",id:"3943e598-9843-4784-9388-80e97aa3674b"},{name:"Ranchera",freq:"95.7 FM",file:"ranchera.png",id:"a4e3175d-fa7e-4d4b-979f-e7f875468260"},{name:"La Marca",freq:"94.1 FM",file:"lamarca.png",id:"53ee315d-206f-4271-994b-4c1927ae338b"},{name:"Fiesta",freq:"103.7 FM",file:"fiesta.png",id:"9c2d6264-2009-49a8-a501-848a7bae1051"},{name:"Sonora",freq:"96.9 FM",file:"sonora.png",id:"8e7a8a5b-a2db-4323-8397-46c17f4573ac",customUrl:SONORA_CUSTOM},{name:"Éxitos Xela",freq:"107.1 FM",file:"exitosx.png",id:"ef0c82f1-e446-4093-8455-3a144ca2e171"},{name:"Flix Xela",freq:"93.9 FM",file:"fixx.png",id:"c2af032e-3e29-4551-a757-e4f3d349386c"}].map(s=>{if(s.customUrl){return {...s,urls:[s.customUrl,`${CDN_NUEVO}/live/${s.id}/ts:abr.m3u8`,`${CDN_VIEJO}/live/${s.id}/ts:abr.m3u8`]};}return {...s,urls:[`${CDN_NUEVO}/live/${s.id}/ts:abr.m3u8`,`${CDN_VIEJO}/live/${s.id}/ts:abr.m3u8`]};});
 let currentIndex=-1;let isPlaying=false;let viewMode=localStorage.getItem('crg_view')||'grid';let showFavoritesOnly=false;let favorites=JSON.parse(localStorage.getItem('crg_favs')||'[]');let hlsInstance=null;let prevVol=1;
 const audio=document.getElementById('audioEl');const playerBar=document.getElementById('playerBar');const playerStationName=document.getElementById('playerStationName');const playerLogo=document.getElementById('playerLogo');const playerLogoWrap=document.getElementById('playerLogoWrap');const playerLiveText=document.getElementById('playerLiveText');const playIcon=document.getElementById('playIcon');const pauseIcon=document.getElementById('pauseIcon');const container=document.getElementById('stationsContainer');const searchInput=document.getElementById('searchInput');const listMeta=document.getElementById('listMeta');const ambientGlow=document.getElementById('ambientGlow');const volIconBtn=document.getElementById('volIconBtn');const volIconHigh=document.getElementById('volIconHigh');const volIconMuted=document.getElementById('volIconMuted');const volPct=document.getElementById('volPct');const volumeRange=document.getElementById('volumeRange');
 const onlineCountEl=document.getElementById('onlineCount');const onlineSubtitleEl=document.getElementById('onlineSubtitle');
@@ -202,27 +165,27 @@ let toastTimer;function showToast(msg){const t=document.getElementById('toast');
 function isFav(i){return favorites.includes(i);}function toggleFav(i,e){if(e)e.stopPropagation();const pos=favorites.indexOf(i);if(pos>-1){favorites.splice(pos,1);showToast('Eliminada');}else{favorites.push(i);showToast('Añadida');}localStorage.setItem('crg_favs',JSON.stringify(favorites));render();}
 function getFilteredStations(){const q=searchInput.value.trim().toLowerCase();return stations.map((s,i)=>({...s,_i:i,neon:getNeon(i)})).filter(s=>{const matches=!q||(s.name.toLowerCase().includes(q)||s.freq.toLowerCase().includes(q));const favOk=!showFavoritesOnly||isFav(s._i);return matches&&favOk;});}
 function render(){
-const list=getFilteredStations();listMeta.textContent=`${list.length} emisora${list.length!==1?'s':''}${showFavoritesOnly?' • Favoritas':''} • 6 con IP nueva`;
+const list=getFilteredStations();listMeta.textContent=`${list.length} emisora${list.length!==1?'s':''}${showFavoritesOnly?' • Favoritas':''}`;
 if(list.length===0){container.innerHTML=`<div class="empty-state">Sin emisoras.</div>`;return;}
 if(viewMode==='grid'){
 container.innerHTML=`<div class="stations-grid" id="gridWrap"></div>`;const grid=document.getElementById('gridWrap');
 list.forEach(s=>{
 const el=document.createElement('div');el.className='station-card'+(s._i===currentIndex?' active':'');el.style.setProperty('--neon',s.neon.color);el.style.setProperty('--neon-border',s.neon.border);el.style.setProperty('--neon-soft',s.neon.soft);el.style.setProperty('--neon-glow',s.neon.glow);
-el.innerHTML=`<button class="card-fav-btn ${isFav(s._i)?'is-fav':''}" data-fav="${s._i}"><svg width="13" height="13" viewBox="0 0 24 24" fill="${isFav(s._i)?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M12 17.3l-6.18 3.25 1.18-6.88L2 8.93l6.91-1L12 1.5l3.09 6.43 6.91 1-5 4.74 1.18 6.88z"/></svg></button><div class="card-logo-wrap"><img src="${s.file}" alt="${s.name}" loading="lazy" onerror="this.onerror=null;this.src='${svgFallback(s.name,s.neon)}'"></div><div class="card-name">${s.name}${NEW_STREAMS[s.name]?' • IP':''}</div><div class="card-freq">${s.freq}</div>`;
+el.innerHTML=`<button class="card-fav-btn ${isFav(s._i)?'is-fav':''}" data-fav="${s._i}"><svg width="13" height="13" viewBox="0 0 24 24" fill="${isFav(s._i)?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M12 17.3l-6.18 3.25 1.18-6.88L2 8.93l6.91-1L12 1.5l3.09 6.43 6.91 1-5 4.74 1.18 6.88z"/></svg></button><div class="card-logo-wrap"><img src="${s.file}" alt="${s.name}" loading="lazy" onerror="this.onerror=null;this.src='${svgFallback(s.name,s.neon)}'"></div><div class="card-name">${s.name}</div><div class="card-freq">${s.freq}</div>`;
 el.addEventListener('click',()=>playStation(s._i));el.querySelector('[data-fav]').addEventListener('click',(e)=>toggleFav(s._i,e));grid.appendChild(el);
 });
 }else if(viewMode==='list'){
 container.innerHTML=`<div class="stations-list" id="listWrap"></div>`;const wrap=document.getElementById('listWrap');
 list.forEach(s=>{
 const row=document.createElement('div');row.className='list-row'+(s._i===currentIndex?' active':'');row.style.setProperty('--neon',s.neon.color);row.style.setProperty('--neon-border',s.neon.border);row.style.setProperty('--neon-soft',s.neon.soft);
-row.innerHTML=`<div class="list-logo"><img src="${s.file}" alt="${s.name}" loading="lazy" onerror="this.onerror=null;this.src='${svgFallback(s.name,s.neon)}'"></div><div class="list-info"><div class="list-name">${s.name}${NEW_STREAMS[s.name]?' • IP':''}</div><div class="list-freq">${s.freq}</div></div><div class="list-actions"><button class="card-fav-btn ${isFav(s._i)?'is-fav':''}" data-fav="${s._i}" style="position:static">★</button><button class="list-play">▶</button></div>`;
+row.innerHTML=`<div class="list-logo"><img src="${s.file}" alt="${s.name}" loading="lazy" onerror="this.onerror=null;this.src='${svgFallback(s.name,s.neon)}'"></div><div class="list-info"><div class="list-name">${s.name}</div><div class="list-freq">${s.freq}</div></div><div class="list-actions"><button class="card-fav-btn ${isFav(s._i)?'is-fav':''}" data-fav="${s._i}" style="position:static">★</button><button class="list-play">▶</button></div>`;
 row.addEventListener('click',(e)=>{if(!e.target.closest('[data-fav]'))playStation(s._i);});row.querySelector('.list-play').addEventListener('click',(e)=>{e.stopPropagation();playStation(s._i);});row.querySelector('[data-fav]').addEventListener('click',(e)=>toggleFav(s._i,e));wrap.appendChild(row);
 });
 }else{
 container.innerHTML=`<div class="stations-compact" id="compactWrap"></div>`;const wrap=document.getElementById('compactWrap');
 list.forEach(s=>{
 const pill=document.createElement('button');pill.className='compact-pill'+(s._i===currentIndex?' active':'');pill.style.setProperty('--neon',s.neon.color);pill.style.setProperty('--neon-border',s.neon.border);pill.style.setProperty('--neon-soft',s.neon.soft);
-pill.innerHTML=`<img src="${s.file}" alt="" onerror="this.onerror=null;this.src='${svgFallback(s.name,s.neon)}'"><span>${s.name} <small style="opacity:0.6;margin-left:3px">${s.freq}${NEW_STREAMS[s.name]?' • IP':''}</small></span>`;
+pill.innerHTML=`<img src="${s.file}" alt="" onerror="this.onerror=null;this.src='${svgFallback(s.name,s.neon)}'"><span>${s.name} <small style="opacity:0.6;margin-left:3px">${s.freq}</small></span>`;
 pill.addEventListener('click',()=>playStation(s._i));wrap.appendChild(pill);
 });
 }
@@ -231,13 +194,13 @@ function playStation(index,urlTry=0){
 if(index<0||index>=stations.length)return;const st=stations[index];const url=st.urls[urlTry];
 if(!url){showToast("Sin conexión");playerLiveText.textContent="Error";return;}
 const neon=getNeon(index);
-currentIndex=index;playerStationName.textContent=`${st.name} — ${st.freq}${NEW_STREAMS[st.name]?' • IP Directa':''}`;playerLogo.src=st.file;playerLogo.alt=st.name;
+currentIndex=index;playerStationName.textContent=`${st.name} — ${st.freq}`;playerLogo.src=st.file;playerLogo.alt=st.name;
 playerLogo.onerror=function(){this.onerror=null;this.src=svgFallback(st.name,neon);};
 playerBar.style.setProperty('--player-neon',neon.color);playerBar.style.setProperty('--player-neon-soft',neon.soft);playerBar.style.setProperty('--player-neon-border',neon.border);
 ambientGlow.style.setProperty('--glow',neon.bg);ambientGlow.style.setProperty('--glow2',neon.bg2);ambientGlow.classList.add('on');
 playerLogoWrap.style.borderColor=neon.color;playerLiveText.textContent="Conectando…";render();
 if(hlsInstance){try{hlsInstance.destroy();}catch(e){}hlsInstance=null;}audio.pause();
-const tryNextUrl=()=>{if(urlTry+1<st.urls.length){playStation(index,urlTry+1);}else{playerLiveText.textContent="Error de señal";showToast("Error con "+st.name+" — puede ser bloqueo http/https");}};
+const tryNextUrl=()=>{if(urlTry+1<st.urls.length){playStation(index,urlTry+1);}else{playerLiveText.textContent="Error de señal";showToast("Error con "+st.name);}};
 const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
 if(isIOS||audio.canPlayType('application/vnd.apple.mpegurl')){audio.src=url;audio.load();audio.play().catch(()=>{});return;}
 if(window.Hls&&Hls.isSupported()){
@@ -262,6 +225,7 @@ volIconBtn.addEventListener('click', ()=>{
   if(audio.volume>0){prevVol=audio.volume; setVolume(0);}
   else{setVolume(prevVol||0.8);}
 });
+// CONTADOR ONLINE SIMULADO
 let onlineBase = 0;
 function initOnlineCounter(){
   const hour = new Date().getHours();
@@ -273,10 +237,17 @@ function initOnlineCounter(){
   onlineBase = base + Math.floor(Math.random()*60) - 10;
   updateOnlineDisplay();
   setInterval(()=>{
-    const delta = Math.floor(Math.random()*7) - 2;
+    const delta = Math.floor(Math.random()*7) - 2; // -2 a +4
     onlineBase = Math.max(65, onlineBase + delta);
     updateOnlineDisplay(true);
   }, 3200);
+  setInterval(()=>{
+    // picos ocasionales cuando alguien cambia de radio
+    if(Math.random() > 0.7){
+      onlineBase += Math.floor(Math.random()*6)+1;
+      updateOnlineDisplay(true);
+    }
+  }, 8000);
 }
 function updateOnlineDisplay(animate){
   if(!onlineCountEl) return;
@@ -287,6 +258,7 @@ function updateOnlineDisplay(animate){
     setTimeout(()=>onlineCountEl.classList.remove('bump'), 250);
   }
 }
+
 audio.addEventListener('play',()=>{isPlaying=true;playerBar.classList.add('playing');playIcon.classList.add('hidden');pauseIcon.classList.remove('hidden');playerLiveText.textContent="EN VIVO";render();});
 audio.addEventListener('pause',()=>{isPlaying=false;playerBar.classList.remove('playing');pauseIcon.classList.add('hidden');playIcon.classList.remove('hidden');playerLiveText.textContent=currentIndex>=0?"Pausado":"En espera";render();});
 audio.addEventListener('waiting',()=>{playerLiveText.textContent="Cargando…";});audio.addEventListener('playing',()=>{playerLiveText.textContent="EN VIVO";});
