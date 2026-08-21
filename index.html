@@ -93,15 +93,16 @@ body.mobile-stable .player-bar.playing .vbar{animation:none !important}
 <header class="site-header">
 <div class="header-badges">
 <div class="live-badge"><span class="live-dot"></span>EN VIVO</div>
-
+<div class="online-counter"><span class="online-dot"></span><span id="onlineCount">0</span> en línea</div>
 </div>
 <h1 class="site-title"><span class="thin">CENTRAL DE RADIOS</span><span class="grad">GUATEMALA</span></h1>
 <p class="site-subtitle">• LMB Desing •</p>
 </header>
 <div class="controls-bar">
 <div class="search-wrap">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+<input id="searchInput" class="search-input" type="search" placeholder="Buscar emisora..." autocomplete="off" />
 
-</div>
 </div>
 <div class="list-meta" id="listMeta"></div>
 <main id="stationsContainer"></main>
