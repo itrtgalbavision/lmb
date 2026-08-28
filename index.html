@@ -2,36 +2,76 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radio Sonora</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-</head>
-<body style="background:#121212; color:white; font-family:sans-serif; text-align:center; padding-top:50px;">
-
-    <h2>Radio Sonora - En Vivo</h2>
-    <audio id="radio" controls style="width: 300px; margin-top:20px;"></audio>
-    <p id="status" style="color: #aaa; font-size: 14px; margin-top: 10px;"></p>
-
-    <script>
-        const url = 'http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8';
-        const audio = document.getElementById('radio');
-        const status = document.getElementById('status');
-
-        if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(url);
-            hls.attachMedia(audio);
-            hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                status.innerText = "Señal lista. Haz clic en Play.";
-            });
-            hls.on(Hls.Events.ERROR, (event, data) => {
-                if (data.fatal) {
-                    status.innerText = "Error: El servidor de la radio no responde o el puerto 8081 está bloqueado.";
-                    status.style.color = "#ff5555";
-                }
-            });
-        } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-            audio.src = url;
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-    </script>
+
+        .player-card {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 320px;
+        }
+
+        .player-card h2 {
+            margin-top: 0;
+            color: #4caf50;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .direct-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 18px;
+            background-color: #333;
+            color: #4caf50;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid #4caf50;
+        }
+
+        .direct-btn:hover {
+            background-color: #4caf50;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="player-card">
+        <h2>Radio Sonora</h2>
+        <p style="margin: 5px 0; color: #aaa;">Transmisión en Vivo</p>
+
+        <!-- REPRODUCTOR HTML5 PURO (Sin JavaScript) -->
+        <audio controls preload="auto">
+            <source src="http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8" type="application/x-mpegURL">
+            <source src="http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8" type="audio/aac">
+            Tu navegador no soporta el reproductor de audio.
+        </audio>
+
+        <br>
+        <!-- Respaldo para móviles o navegadores estrictos -->
+        <a href="http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8" target="_blank" class="direct-btn">
+            Escuchar en pestaña nueva ↗
+        </a>
+    </div>
+
 </body>
 </html>
