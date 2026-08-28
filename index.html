@@ -31,31 +31,24 @@
             color: #4caf50;
         }
 
-        .btn-stream {
-            display: inline-block;
-            background-color: #4caf50;
-            color: white;
-            padding: 12px 20px;
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: bold;
-            margin-top: 15px;
-            transition: background 0.3s;
-        }
-
-        .btn-stream:hover {
-            background-color: #45a049;
-        }
-
         audio {
             width: 100%;
             margin-top: 15px;
         }
 
-        .note {
-            font-size: 0.8rem;
-            color: #888;
+        .option-group {
             margin-top: 15px;
+            text-align: left;
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
         }
     </style>
 </head>
@@ -63,27 +56,36 @@
 
     <div class="player-card">
         <h2>Transmisión en Vivo</h2>
-        <p style="margin: 5px 0;">Radio Sonora</p>
+        <p style="margin: 5px 0 15px 0;">Radio Sonora</p>
 
-        <!-- Opción 1: Reproductor Directo de Audio HTML5 -->
-        <audio controls preload="none">
-            <source src="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8" type="application/x-mpegURL">
-            <source src="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8" type="audio/mpeg">
-            Tu navegador no soporta reproducción directa.
-        </audio>
+        <!-- Reproductor Principal -->
+        <audio id="mainPlayer" controls autoplay></audio>
 
-        <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
-
-        <!-- Opción 2: Enlace directo (By-pass completo de restricciones CORS) -->
-        <p style="font-size: 0.9rem;">¿No reproduce en tu navegador?</p>
-        <a href="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8" class="btn-stream" target="_blank">
-            Abrir Stream Directo
-        </a>
-
-        <div class="note">
-            Nota: Si la página web está alojada en HTTPS, debes usar la opción de "Abrir Stream Directo" o abrir este archivo HTML localmente desde tu equipo.
+        <div class="option-group">
+            <label for="streamSelect">Si no se escucha, cambia de señal:</label>
+            <select id="streamSelect" style="width: 100%; padding: 8px; border-radius: 4px; background: #333; color: white; border: 1px solid #555;">
+                <option value="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8">Señal 1: playlist.m3u8</option>
+                <option value="http://192.168.155.83:8081/sonora">Señal 2: /sonora (Directo)</option>
+                <option value="http://192.168.155.83:8081/sonora/stream">Señal 3: /sonora/stream</option>
+                <option value="http://192.168.155.83:8081/sonora.mp3">Señal 4: /sonora.mp3</option>
+                <option value="http://192.168.155.83:8081/stream">Señal 5: /stream</option>
+            </select>
         </div>
     </div>
+
+    <script>
+        const player = document.getElementById('mainPlayer');
+        const selector = document.getElementById('streamSelect');
+
+        // Establecer fuente inicial
+        player.src = selector.value;
+
+        // Cambiar fuente al seleccionar
+        selector.addEventListener('change', (e) => {
+            player.src = e.target.value;
+            player.play();
+        });
+    </script>
 
 </body>
 </html>
