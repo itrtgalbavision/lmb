@@ -1,222 +1,141 @@
 <!DOCTYPE html>
-
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Radio Sonora</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Sonora HD</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #0e1017;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+        .card {
+            background-color: #171925;
+            padding: 35px 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 320px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
 
-<style>
-body{
-    margin:0;
-    background:#111;
-    color:white;
-    font-family:Arial;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-}
+        .card h2 {
+            margin: 0 0 5px 0;
+            color: #00e676;
+            font-size: 1.4rem;
+        }
 
-.player{
-    width:350px;
-    padding:30px;
-    background:#222;
-    border-radius:20px;
-    text-align:center;
-}
+        .status {
+            font-size: 0.85rem;
+            color: #8a8f9d;
+            margin-bottom: 25px;
+        }
 
-button{
-    width:80px;
-    height:80px;
-    border:0;
-    border-radius:50%;
-    font-size:30px;
-    cursor:pointer;
-}
+        .play-btn {
+            background-color: #00e676;
+            color: #000;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3);
+        }
 
-#estado{
-    margin:20px 0;
-    color:#aaa;
-}
-</style>
+        .play-btn:hover {
+            background-color: #00c853;
+            transform: scale(1.02);
+        }
 
+        audio { display: none; }
+    </style>
 </head>
-
 <body>
 
-<div class="player">
+    <div class="card">
+        <h2>Radio Sonora</h2>
+        <p style="margin: 0 0 10px 0; color: #ccc; font-size: 0.9rem;">Transmisión en Vivo</p>
+        <div id="status" class="status">Listo para conectar</div>
 
-```
-<h2>📻 RADIO SONORA</h2>
+        <button id="playBtn" class="play-btn">▶ Escuchar En Vivo</button>
+        <audio id="audioElement" crossorigin="anonymous"></audio>
+    </div>
 
-<div id="estado">
-    Preparando...
-</div>
+    <script>
+        // Tunneling directo a través de proxy seguro para librar el HTTPS de Cloudflare Pages
+        const targetUrl = 'http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8';
+        const secureStream = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
 
-<button id="play">
-    ▶
-</button>
+        const audio = document.getElementById('audioElement');
+        const playBtn = document.getElementById('playBtn');
+        const status = document.getElementById('status');
 
-<br><br>
+        let hls = null;
+        let isPlaying = false;
 
-<input
-    id="volumen"
-    type="range"
-    min="0"
-    max="1"
-    step="0.01"
-    value="1">
+        function togglePlay() {
+            if (!isPlaying) {
+                status.innerText = "Conectando señal...";
+                status.style.color = "#ffb74d";
+                
+                if (Hls.isSupported()) {
+                    if (hls) hls.destroy();
 
-<audio id="audio" controls></audio>
-```
+                    hls = new Hls({
+                        enableWorker: true,
+                        lowLatencyMode: true
+                    });
 
-</div>
+                    hls.loadSource(secureStream);
+                    hls.attachMedia(audio);
 
-<script>
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        audio.play().then(() => {
+                            isPlaying = true;
+                            playBtn.innerText = "❚❚ Pausar";
+                            status.innerText = "● EN VIVO";
+                            status.style.color = "#00e676";
+                        }).catch(() => {
+                            status.innerText = "Haz clic de nuevo en Play";
+                        });
+                    });
 
-const URL_STREAM =
-"http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8";
-
-const audio =
-document.getElementById("audio");
-
-const boton =
-document.getElementById("play");
-
-const estado =
-document.getElementById("estado");
-
-const volumen =
-document.getElementById("volumen");
-
-
-/* VOLUMEN */
-
-audio.volume = 1;
-
-volumen.addEventListener("input", () => {
-
-    audio.volume =
-        volumen.value;
-
-});
-
-
-/* HLS */
-
-let hls;
-
-
-if (Hls.isSupported()) {
-
-    console.log("HLS.js soportado");
-
-    hls = new Hls({
-
-        enableWorker: true,
-
-        lowLatencyMode: false,
-
-        debug: true
-
-    });
-
-    hls.loadSource(URL_STREAM);
-
-    hls.attachMedia(audio);
-
-
-    hls.on(
-        Hls.Events.MANIFEST_PARSED,
-        function () {
-
-            console.log(
-                "M3U8 cargado correctamente"
-            );
-
-            estado.innerHTML =
-                "🟢 STREAM DISPONIBLE";
-
-        }
-    );
-
-
-    hls.on(
-        Hls.Events.ERROR,
-        function(event, data){
-
-            console.error(
-                "HLS ERROR:",
-                data
-            );
-
-            estado.innerHTML =
-                "🔴 Error HLS: " +
-                data.details;
-
-        }
-    );
-
-}
-
-
-/* Safari */
-
-else if (
-    audio.canPlayType(
-        "application/vnd.apple.mpegurl"
-    )
-) {
-
-    audio.src = URL_STREAM;
-
-}
-
-
-/* PLAY */
-
-boton.addEventListener(
-    "click",
-    async function(){
-
-        try{
-
-            if(audio.paused){
-
-                await audio.play();
-
-                boton.innerHTML = "⏸";
-
-                estado.innerHTML =
-                    "🟢 REPRODUCIENDO";
-
-            }else{
-
+                    hls.on(Hls.Events.ERROR, (event, data) => {
+                        if (data.fatal) {
+                            status.innerText = "Error en la señal";
+                            status.style.color = "#ff5252";
+                        }
+                    });
+                } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+                    audio.src = targetUrl;
+                    audio.play();
+                    isPlaying = true;
+                    playBtn.innerText = "❚❚ Pausar";
+                    status.innerText = "● EN VIVO";
+                }
+            } else {
                 audio.pause();
-
-                boton.innerHTML = "▶";
-
-                estado.innerHTML =
-                    "⏹ PAUSADO";
-
+                if (hls) hls.destroy();
+                isPlaying = false;
+                playBtn.innerText = "▶ Escuchar En Vivo";
+                status.innerText = "Pausado";
+                status.style.color = "#8a8f9d";
             }
-
-        }catch(error){
-
-            console.error(error);
-
-            estado.innerHTML =
-                "🔴 " + error.message;
-
         }
 
-    }
-);
-
-</script>
+        playBtn.addEventListener('click', togglePlay);
+    </script>
 
 </body>
 </html>
