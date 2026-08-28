@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Sonora</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <title>Radio Sonora - En Vivo</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -32,29 +31,31 @@
             color: #4caf50;
         }
 
-        .status {
-            font-size: 0.85rem;
-            color: #aaaaaa;
-            margin-bottom: 15px;
+        .btn-stream {
+            display: inline-block;
+            background-color: #4caf50;
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .btn-stream:hover {
+            background-color: #45a049;
         }
 
         audio {
             width: 100%;
-            margin-top: 10px;
+            margin-top: 15px;
         }
 
-        button {
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #45a049;
+        .note {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -63,75 +64,26 @@
     <div class="player-card">
         <h2>Transmisión en Vivo</h2>
         <p style="margin: 5px 0;">Radio Sonora</p>
-        <div id="status" class="status">Esperando inicio...</div>
-        
-        <audio id="audioPlayer" controls></audio>
-        <br>
-        <button id="forcePlayBtn">Reconectar / Forzar Play</button>
+
+        <!-- Opción 1: Reproductor Directo de Audio HTML5 -->
+        <audio controls preload="none">
+            <source src="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8" type="application/x-mpegURL">
+            <source src="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8" type="audio/mpeg">
+            Tu navegador no soporta reproducción directa.
+        </audio>
+
+        <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
+
+        <!-- Opción 2: Enlace directo (By-pass completo de restricciones CORS) -->
+        <p style="font-size: 0.9rem;">¿No reproduce en tu navegador?</p>
+        <a href="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8" class="btn-stream" target="_blank">
+            Abrir Stream Directo
+        </a>
+
+        <div class="note">
+            Nota: Si la página web está alojada en HTTPS, debes usar la opción de "Abrir Stream Directo" o abrir este archivo HTML localmente desde tu equipo.
+        </div>
     </div>
-
-    <script>
-        const streamUrl = 'http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8';
-        const audio = document.getElementById('audioPlayer');
-        const statusText = document.getElementById('status');
-        const btn = document.getElementById('forcePlayBtn');
-
-        let hls;
-
-        function initPlayer() {
-            statusText.innerText = "Conectando a la red local...";
-            
-            if (hls) {
-                hls.destroy();
-            }
-
-            if (Hls.isSupported()) {
-                hls = new Hls({
-                    // Forzar a no buscar pistas de video
-                    autoStartLoad: true,
-                    startPosition: -1,
-                    // Desactivar workers si fallan por restricciones del navegador
-                    enableWorker: false,
-                    // Reintento continuo ante fallos de red local
-                    manifestLoadingMaxRetry: 5,
-                    levelLoadingMaxRetry: 5
-                });
-
-                hls.loadSource(streamUrl);
-                hls.attachMedia(audio);
-
-                hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                    statusText.innerText = 'Señal lista. Presiona Play';
-                    statusText.style.color = '#4caf50';
-                });
-
-                hls.on(Hls.Events.ERROR, function (event, data) {
-                    if (data.fatal) {
-                        statusText.innerText = 'Servidor bloqueó la transmisión (CORS/Mezcla HTTP)';
-                        statusText.style.color = '#f44336';
-                    }
-                });
-
-            } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-                audio.src = streamUrl;
-                statusText.innerText = 'Listo (Safari)';
-            }
-        }
-
-        // Forzar arranque manual
-        btn.addEventListener('click', () => {
-            initPlayer();
-            audio.play().then(() => {
-                statusText.innerText = 'Reproduciendo audio...';
-                statusText.style.color = '#4caf50';
-            }).catch(err => {
-                statusText.innerText = 'Haz clic en el botón de Play del reproductor';
-            });
-        });
-
-        // Inicializar al cargar
-        initPlayer();
-    </script>
 
 </body>
 </html>
