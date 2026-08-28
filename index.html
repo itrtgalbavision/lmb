@@ -2,18 +2,136 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Radio Sonora - Directo</title>
-</head>
-<body style="background:#121212; color:white; text-align:center; padding-top:50px;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor Sonora</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
 
-    <h2>Radio Sonora en Vivo</h2>
-    
-    <!-- Intentar reproducción directa -->
-    <audio controls autoplay>
-        <source src="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8" type="application/x-mpegURL">
-        <source src="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8" type="audio/mpeg">
-        Tu navegador no soporta este reproductor.
-    </audio>
+        .player-card {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 320px;
+        }
+
+        .player-card h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: #4caf50;
+        }
+
+        .status {
+            font-size: 0.85rem;
+            color: #aaaaaa;
+            margin-bottom: 15px;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="player-card">
+        <h2>Transmisión en Vivo</h2>
+        <p style="margin: 5px 0;">Radio Sonora</p>
+        <div id="status" class="status">Esperando inicio...</div>
+        
+        <audio id="audioPlayer" controls></audio>
+        <br>
+        <button id="forcePlayBtn">Reconectar / Forzar Play</button>
+    </div>
+
+    <script>
+        const streamUrl = 'http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8';
+        const audio = document.getElementById('audioPlayer');
+        const statusText = document.getElementById('status');
+        const btn = document.getElementById('forcePlayBtn');
+
+        let hls;
+
+        function initPlayer() {
+            statusText.innerText = "Conectando a la red local...";
+            
+            if (hls) {
+                hls.destroy();
+            }
+
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    // Forzar a no buscar pistas de video
+                    autoStartLoad: true,
+                    startPosition: -1,
+                    // Desactivar workers si fallan por restricciones del navegador
+                    enableWorker: false,
+                    // Reintento continuo ante fallos de red local
+                    manifestLoadingMaxRetry: 5,
+                    levelLoadingMaxRetry: 5
+                });
+
+                hls.loadSource(streamUrl);
+                hls.attachMedia(audio);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    statusText.innerText = 'Señal lista. Presiona Play';
+                    statusText.style.color = '#4caf50';
+                });
+
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) {
+                        statusText.innerText = 'Servidor bloqueó la transmisión (CORS/Mezcla HTTP)';
+                        statusText.style.color = '#f44336';
+                    }
+                });
+
+            } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+                audio.src = streamUrl;
+                statusText.innerText = 'Listo (Safari)';
+            }
+        }
+
+        // Forzar arranque manual
+        btn.addEventListener('click', () => {
+            initPlayer();
+            audio.play().then(() => {
+                statusText.innerText = 'Reproduciendo audio...';
+                statusText.style.color = '#4caf50';
+            }).catch(err => {
+                statusText.innerText = 'Haz clic en el botón de Play del reproductor';
+            });
+        });
+
+        // Inicializar al cargar
+        initPlayer();
+    </script>
 
 </body>
 </html>
