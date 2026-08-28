@@ -2,114 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Sonora</title>
-    <!-- Cargamos hls.js -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .player-card {
-            background-color: #1e1e1e;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            width: 320px;
-        }
-
-        .player-card h2 {
-            margin-top: 0;
-            font-size: 1.2rem;
-            color: #4caf50;
-        }
-
-        .status {
-            font-size: 0.85rem;
-            color: #aaaaaa;
-            margin-bottom: 15px;
-        }
-
-        audio {
-            width: 100%;
-            margin-top: 10px;
-            outline: none;
-        }
-    </style>
+    <title>Radio Sonora - Directo</title>
 </head>
-<body>
+<body style="background:#121212; color:white; text-align:center; padding-top:50px;">
 
-    <div class="player-card">
-        <h2>Transmisión en Vivo</h2>
-        <p style="margin: 5px 0;">Radio Sonora</p>
-        <div id="status" class="status">Cargando señal...</div>
-        
-        <!-- Elemento de audio -->
-        <audio id="audioPlayer" controls></audio>
-    </div>
-
-    <script>
-        const streamUrl = 'http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8';
-        const audio = document.getElementById('audioPlayer');
-        const statusText = document.getElementById('status');
-
-        if (Hls.isSupported()) {
-            // Configuración optimizada para streams HLS de SOLO AUDIO
-            const hls = new Hls({
-                enableWorker: true,
-                lowLatencyMode: true,
-                backBufferLength: 0
-            });
-
-            hls.loadSource(streamUrl);
-            hls.attachMedia(audio);
-
-            hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                statusText.innerText = 'Listo para reproducir';
-                statusText.style.color = '#4caf50';
-            });
-
-            hls.on(Hls.Events.ERROR, function (event, data) {
-                if (data.fatal) {
-                    switch (data.type) {
-                        case Hls.ErrorTypes.NETWORK_ERROR:
-                            statusText.innerText = 'Error de red / Servidor no responde';
-                            statusText.style.color = '#f44336';
-                            hls.startLoad();
-                            break;
-                        case Hls.ErrorTypes.MEDIA_ERROR:
-                            statusText.innerText = 'Error decodificando audio';
-                            statusText.style.color = '#f44336';
-                            hls.recoverMediaError();
-                            break;
-                        default:
-                            statusText.innerText = 'Error al cargar el stream';
-                            statusText.style.color = '#f44336';
-                            hls.destroy();
-                            break;
-                    }
-                }
-            });
-
-        } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-            // Para Safari (iOS / macOS) que soporta HLS de forma nativa
-            audio.src = streamUrl;
-            statusText.innerText = 'Listo (Safari Nativo)';
-            statusText.style.color = '#4caf50';
-        } else {
-            statusText.innerText = 'Tu navegador no soporta HLS';
-            statusText.style.color = '#f44336';
-        }
-    </script>
+    <h2>Radio Sonora en Vivo</h2>
+    
+    <!-- Intentar reproducción directa -->
+    <audio controls autoplay>
+        <source src="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8" type="application/x-mpegURL">
+        <source src="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8" type="audio/mpeg">
+        Tu navegador no soporta este reproductor.
+    </audio>
 
 </body>
 </html>
