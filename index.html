@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor de Audio HLS</title>
+    <title>Reproductor Sonora</title>
+    <!-- Cargamos hls.js -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #121212;
             color: #ffffff;
             display: flex;
@@ -32,9 +33,15 @@
             color: #4caf50;
         }
 
+        .status {
+            font-size: 0.85rem;
+            color: #aaaaaa;
+            margin-bottom: 15px;
+        }
+
         audio {
             width: 100%;
-            margin-top: 15px;
+            margin-top: 10px;
             outline: none;
         }
     </style>
@@ -43,26 +50,64 @@
 
     <div class="player-card">
         <h2>Transmisión en Vivo</h2>
-        <p>Radio Sonora</p>
+        <p style="margin: 5px 0;">Radio Sonora</p>
+        <div id="status" class="status">Cargando señal...</div>
         
+        <!-- Elemento de audio -->
         <audio id="audioPlayer" controls></audio>
     </div>
 
     <script>
         const streamUrl = 'http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8';
         const audio = document.getElementById('audioPlayer');
+        const statusText = document.getElementById('status');
 
-        // Comprobar si el navegador soporta HLS a través de hls.js
         if (Hls.isSupported()) {
-            const hls = new Hls();
+            // Configuración optimizada para streams HLS de SOLO AUDIO
+            const hls = new Hls({
+                enableWorker: true,
+                lowLatencyMode: true,
+                backBufferLength: 0
+            });
+
             hls.loadSource(streamUrl);
             hls.attachMedia(audio);
-        }
-        // Soporte nativo para navegadores como Safari (iOS/macOS)
-        else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                statusText.innerText = 'Listo para reproducir';
+                statusText.style.color = '#4caf50';
+            });
+
+            hls.on(Hls.Events.ERROR, function (event, data) {
+                if (data.fatal) {
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            statusText.innerText = 'Error de red / Servidor no responde';
+                            statusText.style.color = '#f44336';
+                            hls.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            statusText.innerText = 'Error decodificando audio';
+                            statusText.style.color = '#f44336';
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            statusText.innerText = 'Error al cargar el stream';
+                            statusText.style.color = '#f44336';
+                            hls.destroy();
+                            break;
+                    }
+                }
+            });
+
+        } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+            // Para Safari (iOS / macOS) que soporta HLS de forma nativa
             audio.src = streamUrl;
+            statusText.innerText = 'Listo (Safari Nativo)';
+            statusText.style.color = '#4caf50';
         } else {
-            alert('Tu navegador no soporta la reproducción de este formato (HLS).');
+            statusText.innerText = 'Tu navegador no soporta HLS';
+            statusText.style.color = '#f44336';
         }
     </script>
 
