@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radio Sonora - En Vivo</title>
+    <!-- Carga de la librería hls.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -22,69 +24,124 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             text-align: center;
-            width: 320px;
+            width: 340px;
         }
 
         .player-card h2 {
             margin-top: 0;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             color: #4caf50;
+        }
+
+        .status {
+            font-size: 0.85rem;
+            color: #aaaaaa;
+            margin: 10px 0 20px 0;
         }
 
         audio {
             width: 100%;
-            margin-top: 15px;
+            outline: none;
         }
 
-        .option-group {
+        .btn-play {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
             margin-top: 15px;
-            text-align: left;
-            background: #2a2a2a;
-            padding: 10px;
-            border-radius: 8px;
+            transition: background 0.2s;
         }
 
-        label {
-            font-size: 0.85rem;
-            display: block;
-            margin-bottom: 5px;
-            color: #ccc;
+        .btn-play:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
 
     <div class="player-card">
-        <h2>Transmisión en Vivo</h2>
-        <p style="margin: 5px 0 15px 0;">Radio Sonora</p>
+        <h2>Radio Sonora</h2>
+        <p style="margin: 5px 0 0 0; color: #ccc;">Transmisión en Vivo</p>
+        <div id="status" class="status">Inicializando...</div>
 
-        <!-- Reproductor Principal -->
-        <audio id="mainPlayer" controls autoplay></audio>
-
-        <div class="option-group">
-            <label for="streamSelect">Si no se escucha, cambia de señal:</label>
-            <select id="streamSelect" style="width: 100%; padding: 8px; border-radius: 4px; background: #333; color: white; border: 1px solid #555;">
-                <option value="http://192.168.155.83:8081/sonora/stream_abr/playlist.m3u8">Señal 1: playlist.m3u8</option>
-                <option value="http://192.168.155.83:8081/sonora">Señal 2: /sonora (Directo)</option>
-                <option value="http://192.168.155.83:8081/sonora/stream">Señal 3: /sonora/stream</option>
-                <option value="http://192.168.155.83:8081/sonora.mp3">Señal 4: /sonora.mp3</option>
-                <option value="http://192.168.155.83:8081/stream">Señal 5: /stream</option>
-            </select>
-        </div>
+        <!-- Reproductor de audio HTML -->
+        <audio id="audioPlayer" controls></audio>
+        <br>
+        <button id="playBtn" class="btn-play">▶ Reproducir</button>
     </div>
 
     <script>
-        const player = document.getElementById('mainPlayer');
-        const selector = document.getElementById('streamSelect');
+        // URL original de tu stream
+        const rawUrl = 'http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8';
+        
+        // Uso de proxy CORS seguro para evitar que el navegador bloquee la señal HTTP/CORS
+        const streamUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
 
-        // Establecer fuente inicial
-        player.src = selector.value;
+        const audio = document.getElementById('audioPlayer');
+        const statusText = document.getElementById('status');
+        const playBtn = document.getElementById('playBtn');
 
-        // Cambiar fuente al seleccionar
-        selector.addEventListener('change', (e) => {
-            player.src = e.target.value;
-            player.play();
+        let hls;
+
+        function setupHls() {
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 0
+                });
+
+                hls.loadSource(streamUrl);
+                hls.attachMedia(audio);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    statusText.innerText = 'Señal lista';
+                    statusText.style.color = '#4caf50';
+                });
+
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) {
+                        statusText.innerText = 'Error al conectar con la señal';
+                        statusText.style.color = '#f44336';
+                        hls.startLoad();
+                    }
+                });
+            } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+                // Soporte nativo para Safari (macOS / iOS)
+                audio.src = rawUrl;
+                statusText.innerText = 'Listo (Safari)';
+                statusText.style.color = '#4caf50';
+            } else {
+                statusText.innerText = 'Tu navegador no soporta reproducción HLS';
+                statusText.style.color = '#f44336';
+            }
+        }
+
+        // Control del botón de reproducción manual
+        playBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play().then(() => {
+                    statusText.innerText = 'En vivo';
+                    statusText.style.color = '#4caf50';
+                    playBtn.innerText = '❚❚ Pausar';
+                }).catch(err => {
+                    statusText.innerText = 'Presiona Play directamente en el reproductor';
+                });
+            } else {
+                audio.pause();
+                statusText.innerText = 'Pausado';
+                statusText.style.color = '#aaaaaa';
+                playBtn.innerText = '▶ Reproducir';
+            }
         });
+
+        // Inicializar reproductor
+        setupHls();
     </script>
 
 </body>
