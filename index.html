@@ -1,80 +1,645 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Sonora - En Vivo</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        .player-card {
-            background-color: #1e1e1e;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            width: 320px;
-        }
+<title>Radio Sonora - Player</title>
 
-        .player-card h2 {
-            margin-top: 0;
-            color: #4caf50;
-        }
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
 
-        /* Ocultamos el iframe y mostramos solo el reproductor nativo */
-        .stream-frame {
-            width: 100%;
-            height: 60px;
-            border: none;
-            border-radius: 8px;
-            margin-top: 15px;
-            background-color: #2a2a2a;
-        }
+<style>
 
-        .btn-direct {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background-color: #4caf50;
-            color: white;
-            text-decoration: none;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
 
-        .btn-direct:hover {
-            background-color: #45a049;
-        }
-    </style>
+body{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+        radial-gradient(circle at top,#242424 0%,#101010 45%,#050505 100%);
+    font-family:Arial,Helvetica,sans-serif;
+    color:white;
+}
+
+.player{
+    width:420px;
+    max-width:92%;
+    background:rgba(25,25,25,.96);
+    border-radius:25px;
+    padding:28px;
+    box-shadow:
+        0 25px 80px rgba(0,0,0,.65),
+        inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.logo{
+    width:120px;
+    height:120px;
+    margin:0 auto 20px;
+    border-radius:50%;
+    background:linear-gradient(145deg,#222,#080808);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:
+        0 0 0 8px rgba(255,255,255,.03),
+        0 15px 40px rgba(0,0,0,.6);
+    font-size:42px;
+}
+
+.title{
+    text-align:center;
+    font-size:25px;
+    font-weight:bold;
+}
+
+.subtitle{
+    text-align:center;
+    color:#999;
+    margin-top:7px;
+    font-size:14px;
+}
+
+.status{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    margin:22px 0;
+    font-size:13px;
+    color:#aaa;
+}
+
+.dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#777;
+}
+
+.dot.online{
+    background:#21d07a;
+    box-shadow:0 0 12px #21d07a;
+}
+
+.dot.error{
+    background:#ff3b30;
+    box-shadow:0 0 12px #ff3b30;
+}
+
+.visualizer{
+    height:65px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:5px;
+    margin-bottom:22px;
+}
+
+.bar{
+    width:5px;
+    height:12px;
+    border-radius:5px;
+    background:#fff;
+    transition:.2s;
+}
+
+.playing .bar{
+    animation:wave .8s infinite ease-in-out;
+}
+
+.playing .bar:nth-child(2){animation-delay:.1s}
+.playing .bar:nth-child(3){animation-delay:.2s}
+.playing .bar:nth-child(4){animation-delay:.3s}
+.playing .bar:nth-child(5){animation-delay:.4s}
+.playing .bar:nth-child(6){animation-delay:.3s}
+.playing .bar:nth-child(7){animation-delay:.2s}
+.playing .bar:nth-child(8){animation-delay:.1s}
+
+@keyframes wave{
+    0%,100%{
+        height:12px;
+    }
+
+    50%{
+        height:55px;
+    }
+}
+
+.controls{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:20px;
+}
+
+button{
+    border:0;
+    cursor:pointer;
+}
+
+.play{
+    width:72px;
+    height:72px;
+    border-radius:50%;
+    background:white;
+    color:#111;
+    font-size:27px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+    transition:.2s;
+}
+
+.play:hover{
+    transform:scale(1.06);
+}
+
+.volume{
+    width:100%;
+    margin-top:25px;
+}
+
+.volume input{
+    width:100%;
+}
+
+.volume-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#aaa;
+    font-size:14px;
+}
+
+.footer{
+    text-align:center;
+    margin-top:22px;
+    color:#666;
+    font-size:11px;
+}
+
+.live{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 10px;
+    border-radius:20px;
+    background:rgba(255,0,0,.1);
+    color:#ff4d4d;
+    font-size:11px;
+    font-weight:bold;
+}
+
+.live span{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:#ff3333;
+    box-shadow:0 0 8px #ff3333;
+}
+
+</style>
+
 </head>
+
 <body>
 
-    <div class="player-card">
-        <h2>Radio Sonora</h2>
-        <p style="margin: 5px 0; color: #aaa;">Transmisión en Vivo</p>
+<div class="player">
 
-        <!-- Método 1: Embebido directo en marco aislado (evita el bloqueo del Play) -->
-        <iframe class="stream-frame" src="http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8"></iframe>
+```
+<div class="logo">
+    🎙️
+</div>
 
-        <p style="font-size: 0.8rem; color: #888; margin-top: 15px;">
-            Si el marco anterior aparece en blanco en tu navegador:
-        </p>
+<div class="title">
+    RADIO SONORA
+</div>
 
-        <!-- Método 2: Botón de emisión limpia directa -->
-        <a href="http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8" target="_blank" class="btn-direct">
-            ▶ Escuchar en Vivo
-        </a>
+<div class="subtitle">
+    Transmisión en vivo
+</div>
+
+<div class="status">
+    <div id="statusDot" class="dot"></div>
+    <span id="statusText">Preparando transmisión...</span>
+</div>
+
+<div id="visualizer" class="visualizer">
+
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+
+</div>
+
+<div class="controls">
+
+    <button
+        id="playBtn"
+        class="play"
+        onclick="togglePlay()">
+        ▶
+    </button>
+
+</div>
+
+<div class="volume">
+
+    <div class="volume-row">
+
+        <span>🔊</span>
+
+        <input
+            id="volume"
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value="1">
+
     </div>
+
+</div>
+
+<div style="text-align:center;margin-top:18px">
+
+    <div class="live">
+        <span></span>
+        EN VIVO
+    </div>
+
+</div>
+
+<div class="footer">
+    Radio Sonora · Streaming HLS
+</div>
+```
+
+</div>
+
+<video
+ id="audio"
+ style="display:none"
+ playsinline> </video>
+
+<script>
+
+const STREAM_URL =
+"http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8";
+
+const video = document.getElementById("audio");
+const playBtn = document.getElementById("playBtn");
+const volume = document.getElementById("volume");
+
+const statusText =
+document.getElementById("statusText");
+
+const statusDot =
+document.getElementById("statusDot");
+
+const visualizer =
+document.getElementById("visualizer");
+
+let hls = null;
+let reconnectTimer = null;
+
+
+/* =========================
+   ESTADO
+========================= */
+
+function setStatus(text,type){
+
+    statusText.textContent = text;
+
+    statusDot.className = "dot";
+
+    if(type === "online"){
+        statusDot.classList.add("online");
+    }
+
+    if(type === "error"){
+        statusDot.classList.add("error");
+    }
+}
+
+
+/* =========================
+   HLS
+========================= */
+
+function initPlayer(){
+
+    setStatus(
+        "Conectando con Radio Sonora...",
+        ""
+    );
+
+
+    /*
+       Chrome / Edge / Firefox
+       utilizando HLS.js
+    */
+
+    if(Hls.isSupported()){
+
+        if(hls){
+            hls.destroy();
+        }
+
+        hls = new Hls({
+
+            enableWorker:true,
+
+            lowLatencyMode:true,
+
+            backBufferLength:30,
+
+            maxBufferLength:10,
+
+            maxMaxBufferLength:20,
+
+            liveSyncDurationCount:3
+
+        });
+
+
+        hls.loadSource(STREAM_URL);
+
+        hls.attachMedia(video);
+
+
+        hls.on(
+            Hls.Events.MANIFEST_PARSED,
+            function(){
+
+                setStatus(
+                    "Transmisión disponible",
+                    "online"
+                );
+
+            }
+        );
+
+
+        hls.on(
+            Hls.Events.ERROR,
+            function(event,data){
+
+                console.log(
+                    "HLS ERROR:",
+                    data
+                );
+
+
+                if(data.fatal){
+
+                    setStatus(
+                        "Reconectando...",
+                        "error"
+                    );
+
+
+                    switch(data.type){
+
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+
+                            hls.startLoad();
+
+                            break;
+
+
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+
+                            hls.recoverMediaError();
+
+                            break;
+
+
+                        default:
+
+                            hls.destroy();
+
+                            reconnect();
+
+                            break;
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+    /*
+       Safari / dispositivos con HLS nativo
+    */
+
+    else if(
+        video.canPlayType(
+            "application/vnd.apple.mpegurl"
+        )
+    ){
+
+        video.src = STREAM_URL;
+
+        setStatus(
+            "Transmisión disponible",
+            "online"
+        );
+
+    }
+
+    else{
+
+        setStatus(
+            "Este navegador no soporta HLS",
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================
+   PLAY / PAUSE
+========================= */
+
+async function togglePlay(){
+
+    try{
+
+        if(video.paused){
+
+            await video.play();
+
+        }else{
+
+            video.pause();
+
+        }
+
+    }
+
+    catch(error){
+
+        console.log(
+            "No se pudo iniciar:",
+            error
+        );
+
+        setStatus(
+            "Presiona Play para iniciar",
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================
+   EVENTOS
+========================= */
+
+video.addEventListener(
+    "play",
+    function(){
+
+        playBtn.innerHTML = "❚❚";
+
+        visualizer.classList.add(
+            "playing"
+        );
+
+        setStatus(
+            "Reproduciendo en vivo",
+            "online"
+        );
+
+    }
+);
+
+
+video.addEventListener(
+    "pause",
+    function(){
+
+        playBtn.innerHTML = "▶";
+
+        visualizer.classList.remove(
+            "playing"
+        );
+
+    }
+);
+
+
+video.addEventListener(
+    "playing",
+    function(){
+
+        setStatus(
+            "Radio Sonora · EN VIVO",
+            "online"
+        );
+
+    }
+);
+
+
+video.addEventListener(
+    "waiting",
+    function(){
+
+        setStatus(
+            "Bufferizando...",
+            ""
+        );
+
+    }
+);
+
+
+video.addEventListener(
+    "error",
+    function(){
+
+        setStatus(
+            "Error de reproducción",
+            "error"
+        );
+
+        reconnect();
+
+    }
+);
+
+
+/* =========================
+   VOLUMEN
+========================= */
+
+volume.addEventListener(
+    "input",
+    function(){
+
+        video.volume =
+            parseFloat(this.value);
+
+    }
+);
+
+
+/* =========================
+   RECONEXIÓN
+========================= */
+
+function reconnect(){
+
+    clearTimeout(
+        reconnectTimer
+    );
+
+    reconnectTimer =
+        setTimeout(
+            function(){
+
+                initPlayer();
+
+            },
+            5000
+        );
+
+}
+
+
+/* =========================
+   INICIAR
+========================= */
+
+video.volume = 1;
+
+initPlayer();
+
+</script>
 
 </body>
 </html>
