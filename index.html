@@ -2,147 +2,36 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Sonora - En Vivo</title>
-    <!-- Carga de la librería hls.js -->
+    <title>Radio Sonora</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .player-card {
-            background-color: #1e1e1e;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            width: 340px;
-        }
-
-        .player-card h2 {
-            margin-top: 0;
-            font-size: 1.3rem;
-            color: #4caf50;
-        }
-
-        .status {
-            font-size: 0.85rem;
-            color: #aaaaaa;
-            margin: 10px 0 20px 0;
-        }
-
-        audio {
-            width: 100%;
-            outline: none;
-        }
-
-        .btn-play {
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background 0.2s;
-        }
-
-        .btn-play:hover {
-            background-color: #45a049;
-        }
-    </style>
 </head>
-<body>
+<body style="background:#121212; color:white; font-family:sans-serif; text-align:center; padding-top:50px;">
 
-    <div class="player-card">
-        <h2>Radio Sonora</h2>
-        <p style="margin: 5px 0 0 0; color: #ccc;">Transmisión en Vivo</p>
-        <div id="status" class="status">Inicializando...</div>
-
-        <!-- Reproductor de audio HTML -->
-        <audio id="audioPlayer" controls></audio>
-        <br>
-        <button id="playBtn" class="btn-play">▶ Reproducir</button>
-    </div>
+    <h2>Radio Sonora - En Vivo</h2>
+    <audio id="radio" controls style="width: 300px; margin-top:20px;"></audio>
+    <p id="status" style="color: #aaa; font-size: 14px; margin-top: 10px;"></p>
 
     <script>
-        // URL original de tu stream
-        const rawUrl = 'http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8';
-        
-        // Uso de proxy CORS seguro para evitar que el navegador bloquee la señal HTTP/CORS
-        const streamUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+        const url = 'http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8';
+        const audio = document.getElementById('radio');
+        const status = document.getElementById('status');
 
-        const audio = document.getElementById('audioPlayer');
-        const statusText = document.getElementById('status');
-        const playBtn = document.getElementById('playBtn');
-
-        let hls;
-
-        function setupHls() {
-            if (Hls.isSupported()) {
-                hls = new Hls({
-                    enableWorker: true,
-                    lowLatencyMode: true,
-                    backBufferLength: 0
-                });
-
-                hls.loadSource(streamUrl);
-                hls.attachMedia(audio);
-
-                hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                    statusText.innerText = 'Señal lista';
-                    statusText.style.color = '#4caf50';
-                });
-
-                hls.on(Hls.Events.ERROR, function (event, data) {
-                    if (data.fatal) {
-                        statusText.innerText = 'Error al conectar con la señal';
-                        statusText.style.color = '#f44336';
-                        hls.startLoad();
-                    }
-                });
-            } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-                // Soporte nativo para Safari (macOS / iOS)
-                audio.src = rawUrl;
-                statusText.innerText = 'Listo (Safari)';
-                statusText.style.color = '#4caf50';
-            } else {
-                statusText.innerText = 'Tu navegador no soporta reproducción HLS';
-                statusText.style.color = '#f44336';
-            }
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(url);
+            hls.attachMedia(audio);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                status.innerText = "Señal lista. Haz clic en Play.";
+            });
+            hls.on(Hls.Events.ERROR, (event, data) => {
+                if (data.fatal) {
+                    status.innerText = "Error: El servidor de la radio no responde o el puerto 8081 está bloqueado.";
+                    status.style.color = "#ff5555";
+                }
+            });
+        } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+            audio.src = url;
         }
-
-        // Control del botón de reproducción manual
-        playBtn.addEventListener('click', () => {
-            if (audio.paused) {
-                audio.play().then(() => {
-                    statusText.innerText = 'En vivo';
-                    statusText.style.color = '#4caf50';
-                    playBtn.innerText = '❚❚ Pausar';
-                }).catch(err => {
-                    statusText.innerText = 'Presiona Play directamente en el reproductor';
-                });
-            } else {
-                audio.pause();
-                statusText.innerText = 'Pausado';
-                statusText.style.color = '#aaaaaa';
-                playBtn.innerText = '▶ Reproducir';
-            }
-        });
-
-        // Inicializar reproductor
-        setupHls();
     </script>
-
 </body>
 </html>
