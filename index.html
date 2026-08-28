@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Sonora</title>
+    <title>Radio Sonora - En Vivo</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -30,26 +30,30 @@
             color: #4caf50;
         }
 
-        audio {
+        /* Ocultamos el iframe y mostramos solo el reproductor nativo */
+        .stream-frame {
             width: 100%;
+            height: 60px;
+            border: none;
+            border-radius: 8px;
             margin-top: 15px;
+            background-color: #2a2a2a;
         }
 
-        .direct-btn {
+        .btn-direct {
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 18px;
-            background-color: #333;
-            color: #4caf50;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: white;
             text-decoration: none;
             border-radius: 20px;
-            font-size: 0.85rem;
-            border: 1px solid #4caf50;
+            font-weight: bold;
+            font-size: 0.9rem;
         }
 
-        .direct-btn:hover {
-            background-color: #4caf50;
-            color: #fff;
+        .btn-direct:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -59,17 +63,16 @@
         <h2>Radio Sonora</h2>
         <p style="margin: 5px 0; color: #aaa;">Transmisión en Vivo</p>
 
-        <!-- REPRODUCTOR HTML5 PURO (Sin JavaScript) -->
-        <audio controls preload="auto">
-            <source src="http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8" type="application/x-mpegURL">
-            <source src="http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8" type="audio/aac">
-            Tu navegador no soporta el reproductor de audio.
-        </audio>
+        <!-- Método 1: Embebido directo en marco aislado (evita el bloqueo del Play) -->
+        <iframe class="stream-frame" src="http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8"></iframe>
 
-        <br>
-        <!-- Respaldo para móviles o navegadores estrictos -->
-        <a href="http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8" target="_blank" class="direct-btn">
-            Escuchar en pestaña nueva ↗
+        <p style="font-size: 0.8rem; color: #888; margin-top: 15px;">
+            Si el marco anterior aparece en blanco en tu navegador:
+        </p>
+
+        <!-- Método 2: Botón de emisión limpia directa -->
+        <a href="http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8" target="_blank" class="btn-direct">
+            ▶ Escuchar en Vivo
         </a>
     </div>
 
