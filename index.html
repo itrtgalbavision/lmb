@@ -1,728 +1,903 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Streams CENTRAL DE RADIOS</title>
-
+    <title>Central de Radios</title>
 
     <style>
+        :root {
+            --bg: #080a0f;
+            --panel: #11151d;
+            --panel2: #171c25;
+            --border: rgba(255,255,255,0.08);
+            --text: #ffffff;
+            --muted: #8e98a8;
+            --green: #20e070;
+            --blue: #2388ff;
+        }
 
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+        }
 
         body {
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(35,136,255,0.12), transparent 35%),
+                radial-gradient(circle at bottom right, rgba(32,224,112,0.08), transparent 35%),
+                var(--bg);
 
-            margin: 0;
-
-            min-height: 100vh;
-
+            color: var(--text);
             display: flex;
-
             justify-content: center;
-
             align-items: center;
 
-            background:
-                radial-gradient(
-                    circle at top,
-                    #1c2633 0%,
-                    #0d1117 45%,
-                    #080b0f 100%
-                );
-
-            font-family:
-                Arial,
-                Helvetica,
-                sans-serif;
-
-            color: white;
-
+            padding: 30px 15px;
         }
 
+        /* =========================
+           CONTENEDOR PRINCIPAL
+        ========================= */
 
         .container {
+            width: 100%;
+            max-width: 780px;
 
-            width: 92%;
+            background: rgba(17,21,29,0.94);
 
-            max-width: 760px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
 
-            padding: 35px;
-
-            background:
-                rgba(22, 27, 34, 0.94);
-
-            border:
-                1px solid #30363d;
-
-            border-radius: 20px;
+            padding: 30px;
 
             box-shadow:
-                0 25px 60px
-                rgba(0, 0, 0, 0.55);
+                0 25px 80px rgba(0,0,0,0.55),
+                inset 0 1px 0 rgba(255,255,255,0.03);
 
+            backdrop-filter: blur(15px);
         }
 
+        /* =========================
+           HEADER
+        ========================= */
 
-        h1 {
-
+        .header {
             text-align: center;
+            margin-bottom: 28px;
+        }
 
-            margin: 0;
-
+        .header h1 {
             font-size: 30px;
-
+            font-weight: 800;
             letter-spacing: 1px;
 
+            background: linear-gradient(
+                90deg,
+                #ffffff,
+                #8fc7ff,
+                #ffffff
+            );
+
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-
-        .subtitle {
-
-            text-align: center;
-
-            color: #8b949e;
-
+        .header p {
             margin-top: 8px;
-
-            margin-bottom: 30px;
-
+            color: var(--muted);
             font-size: 14px;
-
         }
 
-
-        .streams {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(2, 1fr);
-
-            gap: 16px;
-
-        }
-
-
-        .stream {
-
-            position: relative;
-
-            display: flex;
-
+        .live-status {
+            display: inline-flex;
             align-items: center;
+            gap: 8px;
 
-            min-height: 95px;
+            margin-top: 16px;
 
-            padding: 15px 18px;
+            padding: 7px 13px;
 
-            background:
-                linear-gradient(
-                    145deg,
-                    #21262d,
-                    #171b21
-                );
+            border-radius: 30px;
 
-            border:
-                1px solid #30363d;
+            background: rgba(32,224,112,0.08);
+            border: 1px solid rgba(32,224,112,0.15);
 
-            border-radius: 15px;
-
-            color: white;
-
-            cursor: pointer;
-
-            overflow: hidden;
-
-            transition:
-                transform .25s,
-                border-color .25s,
-                box-shadow .25s;
-
-        }
-
-
-        .stream::before {
-
-            content: "";
-
-            position: absolute;
-
-            left: 0;
-
-            top: 0;
-
-            bottom: 0;
-
-            width: 3px;
-
-            background: #3fb950;
-
-        }
-
-
-        .stream:hover {
-
-            transform:
-                translateY(-4px);
-
-            border-color:
-                #58a6ff;
-
-            box-shadow:
-                0 12px 30px
-                rgba(0,0,0,.35);
-
-        }
-
-
-        .radio-icon {
-
-            width: 65px;
-
-            height: 65px;
-
-            flex-shrink: 0;
-
-            object-fit: contain;
-
-            margin-right: 16px;
-
-            border-radius: 12px;
-
-            background: #0d1117;
-
-            padding: 5px;
-
-            border:
-                1px solid #30363d;
-
-            box-shadow:
-                0 5px 15px
-                rgba(0,0,0,.35);
-
-        }
-
-
-        .info {
-
-            flex: 1;
-
-        }
-
-
-        .name {
-
-            display: block;
-
-            font-size: 17px;
-
-            font-weight: bold;
-
-            margin-bottom: 6px;
-
-        }
-
-
-        .type {
-
-            display: block;
-
-            color: #8b949e;
-
+            color: #8ef5b5;
             font-size: 12px;
-
-            text-transform: uppercase;
-
-            letter-spacing: 1px;
-
+            font-weight: bold;
         }
 
+        .live-dot {
+            width: 8px;
+            height: 8px;
 
-        .status {
-
-            width: 10px;
-
-            height: 10px;
-
-            flex-shrink: 0;
-
-            margin-left: 10px;
-
-            background: #3fb950;
+            background: var(--green);
 
             border-radius: 50%;
 
             box-shadow:
-                0 0 8px
-                rgba(63,185,80,.8);
+                0 0 8px var(--green),
+                0 0 16px rgba(32,224,112,0.5);
 
-            animation:
-                pulse 2s infinite;
-
+            animation: pulse 1.6s infinite;
         }
 
-
         @keyframes pulse {
-
             0% {
-                box-shadow:
-                    0 0 5px
-                    rgba(63,185,80,.5);
+                opacity: 1;
+                transform: scale(1);
             }
 
             50% {
-                box-shadow:
-                    0 0 14px
-                    rgba(63,185,80,.9);
+                opacity: .45;
+                transform: scale(.75);
             }
 
             100% {
-                box-shadow:
-                    0 0 5px
-                    rgba(63,185,80,.5);
+                opacity: 1;
+                transform: scale(1);
             }
-
         }
 
+        /* =========================
+           RADIOS
+        ========================= */
+
+        .streams {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stream {
+            position: relative;
+
+            display: flex;
+            align-items: center;
+            gap: 16px;
+
+            min-height: 105px;
+
+            padding: 17px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,0.055),
+                    rgba(255,255,255,0.015)
+                );
+
+            border: 1px solid var(--border);
+            border-radius: 18px;
+
+            cursor: pointer;
+
+            transition:
+                transform .25s ease,
+                border-color .25s ease,
+                background .25s ease,
+                box-shadow .25s ease;
+
+            overflow: hidden;
+        }
+
+        .stream::before {
+            content: "";
+
+            position: absolute;
+
+            width: 120px;
+            height: 120px;
+
+            right: -50px;
+            top: -50px;
+
+            background: radial-gradient(
+                circle,
+                rgba(35,136,255,0.12),
+                transparent 70%
+            );
+
+            pointer-events: none;
+        }
+
+        .stream:hover {
+            transform: translateY(-4px);
+
+            border-color: rgba(35,136,255,0.45);
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(35,136,255,0.09),
+                    rgba(255,255,255,0.025)
+                );
+
+            box-shadow:
+                0 12px 35px rgba(0,0,0,0.35),
+                0 0 25px rgba(35,136,255,0.07);
+        }
+
+        .stream:active {
+            transform: scale(.98);
+        }
+
+        /* =========================
+           LOGO
+        ========================= */
+
+        .logo-box {
+            flex-shrink: 0;
+
+            width: 68px;
+            height: 68px;
+
+            border-radius: 15px;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: #0b0e14;
+
+            border: 1px solid rgba(255,255,255,0.08);
+
+            overflow: hidden;
+
+            box-shadow:
+                0 8px 20px rgba(0,0,0,0.35);
+        }
+
+        .logo-box img {
+            width: 100%;
+            height: 100%;
+
+            object-fit: contain;
+
+            padding: 5px;
+
+            transition: transform .25s ease;
+        }
+
+        .stream:hover .logo-box img {
+            transform: scale(1.08);
+        }
+
+        /* =========================
+           INFORMACION
+        ========================= */
+
+        .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .name {
+            font-size: 17px;
+            font-weight: 800;
+
+            margin-bottom: 7px;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .type {
+            color: var(--muted);
+            font-size: 11px;
+
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .online {
+            display: flex;
+            align-items: center;
+
+            gap: 6px;
+
+            margin-top: 8px;
+
+            color: #77efa4;
+            font-size: 11px;
+        }
+
+        .online-dot {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background: var(--green);
+
+            box-shadow: 0 0 7px var(--green);
+        }
+
+        /* =========================
+           ICONO PLAY
+        ========================= */
+
+        .play {
+            flex-shrink: 0;
+
+            width: 36px;
+            height: 36px;
+
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: rgba(35,136,255,0.10);
+
+            border: 1px solid rgba(35,136,255,0.20);
+
+            color: #6eb4ff;
+
+            font-size: 14px;
+
+            transition: .25s ease;
+        }
+
+        .stream:hover .play {
+            background: rgba(35,136,255,0.20);
+            border-color: rgba(35,136,255,0.45);
+
+            color: white;
+
+            box-shadow: 0 0 18px rgba(35,136,255,0.18);
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
 
         .footer {
-
-            margin-top: 25px;
-
             text-align: center;
 
-            color: #6e7681;
+            margin-top: 24px;
+            padding-top: 20px;
 
-            font-size: 12px;
+            border-top: 1px solid var(--border);
 
+            color: #667080;
+
+            font-size: 11px;
         }
 
+        .footer strong {
+            color: #8a94a5;
+        }
 
-        @media (max-width: 600px) {
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 650px) {
 
             body {
-
-                align-items:
-                    flex-start;
-
-                padding-top: 25px;
-
+                padding: 15px 10px;
+                align-items: flex-start;
             }
-
 
             .container {
+                margin-top: 10px;
+                padding: 20px 15px;
 
-                width: 94%;
-
-                padding:
-                    25px 18px;
-
+                border-radius: 20px;
             }
 
-
-            h1 {
-
-                font-size: 23px;
-
+            .header {
+                margin-bottom: 22px;
             }
 
+            .header h1 {
+                font-size: 25px;
+            }
+
+            .header p {
+                font-size: 12px;
+            }
 
             .streams {
-
                 grid-template-columns: 1fr;
-
-                gap: 12px;
-
+                gap: 11px;
             }
-
 
             .stream {
-
-                min-height: 82px;
-
-                padding:
-                    12px 14px;
-
+                min-height: 88px;
+                padding: 13px;
+                border-radius: 15px;
             }
 
-
-            .radio-icon {
-
-                width: 55px;
-
-                height: 55px;
-
-                margin-right: 13px;
-
+            .logo-box {
+                width: 58px;
+                height: 58px;
+                border-radius: 13px;
             }
-
 
             .name {
-
-                font-size: 16px;
-
+                font-size: 15px;
             }
 
+            .play {
+                width: 34px;
+                height: 34px;
+            }
+
+            .footer {
+                margin-top: 18px;
+                padding-top: 16px;
+            }
         }
 
+        /* =========================
+           CELULARES PEQUEÑOS
+        ========================= */
+
+        @media (max-width: 380px) {
+
+            .container {
+                padding: 17px 11px;
+            }
+
+            .stream {
+                gap: 11px;
+            }
+
+            .logo-box {
+                width: 53px;
+                height: 53px;
+            }
+
+            .name {
+                font-size: 14px;
+            }
+
+            .type {
+                font-size: 10px;
+            }
+        }
     </style>
-
 </head>
-
 
 <body>
 
+<div class="container">
 
-    <div class="container">
+    <!-- HEADER -->
 
+    <div class="header">
 
-        <h1>
-            Streams CENTRAL DE RADIOS
-        </h1>
+        <h1>Central de Radios</h1>
 
+        <p>
+            Acceso directo a las transmisiones en vivo
+        </p>
 
-        <div class="subtitle">
-
-            Selecciona una estación
-            para abrir el streaming
-
+        <div class="live-status">
+            <span class="live-dot"></span>
+            TRANSMISIONES EN VIVO
         </div>
-
-
-        <div class="streams">
-
-
-            <!-- XTREMA -->
-
-            <div
-                class="stream"
-                onclick="
-                    abrirStream(
-                        'http://190.56.85.14:8081/xtrema/stream_abr/playlist.m3u8',
-                        'Xtrema'
-                    )
-                "
-            >
-
-                <img
-                    src="xtrema.png"
-                    alt="Xtrema"
-                    class="radio-icon"
-                >
-
-                <div class="info">
-
-                    <span class="name">
-                        Xtrema
-                    </span>
-
-                    <span class="type">
-                        Streaming M3U8
-                    </span>
-
-                </div>
-
-                <span class="status"></span>
-
-            </div>
-
-
-            <!-- LA MARCA -->
-
-            <div
-                class="stream"
-                onclick="
-                    abrirStream(
-                        'http://190.56.85.14:8081/lamarca/stream_abr/playlist.m3u8',
-                        'La Marca'
-                    )
-                "
-            >
-
-                <img
-                    src="lamarca.png"
-                    alt="La Marca"
-                    class="radio-icon"
-                >
-
-                <div class="info">
-
-                    <span class="name">
-                        La Marca
-                    </span>
-
-                    <span class="type">
-                        Streaming M3U8
-                    </span>
-
-                </div>
-
-                <span class="status"></span>
-
-            </div>
-
-
-            <!-- JOYA -->
-
-            <div
-                class="stream"
-                onclick="
-                    abrirStream(
-                        'http://190.56.85.14:8081/joya/stream_abr/playlist.m3u8',
-                        'Joya'
-                    )
-                "
-            >
-
-                <img
-                    src="joya.png"
-                    alt="Joya"
-                    class="radio-icon"
-                >
-
-                <div class="info">
-
-                    <span class="name">
-                        Joya
-                    </span>
-
-                    <span class="type">
-                        Streaming M3U8
-                    </span>
-
-                </div>
-
-                <span class="status"></span>
-
-            </div>
-
-
-            <!-- GALAXIA -->
-
-            <div
-                class="stream"
-                onclick="
-                    abrirStream(
-                        'http://190.56.85.14:8081/galaxia/stream_abr/playlist.m3u8',
-                        'Galaxia'
-                    )
-                "
-            >
-
-                <img
-                    src="galaxia.png"
-                    alt="Galaxia"
-                    class="radio-icon"
-                >
-
-                <div class="info">
-
-                    <span class="name">
-                        Galaxia
-                    </span>
-
-                    <span class="type">
-                        Streaming M3U8
-                    </span>
-
-                </div>
-
-                <span class="status"></span>
-
-            </div>
-
-
-            <!-- TROPICALIDA -->
-
-            <div
-                class="stream"
-                onclick="
-                    abrirStream(
-                        'http://190.56.85.14:8081/tropicalida/stream_abr/playlist.m3u8',
-                        'Tropicalida'
-                    )
-                "
-            >
-
-                <img
-                    src="tropicalida.png"
-                    alt="Tropicalida"
-                    class="radio-icon"
-                >
-
-                <div class="info">
-
-                    <span class="name">
-                        Tropicalida
-                    </span>
-
-                    <span class="type">
-                        Streaming M3U8
-                    </span>
-
-                </div>
-
-                <span class="status"></span>
-
-            </div>
-
-
-            <!-- ALFA -->
-
-            <div
-                class="stream"
-                onclick="
-                    abrirStream(
-                        'http://190.56.85.14:8081/alfa/stream_abr/playlist.m3u8',
-                        'Alfa'
-                    )
-                "
-            >
-
-                <img
-                    src="alfa.png"
-                    alt="Alfa"
-                    class="radio-icon"
-                >
-
-                <div class="info">
-
-                    <span class="name">
-                        Alfa
-                    </span>
-
-                    <span class="type">
-                        Streaming M3U8
-                    </span>
-
-                </div>
-
-                <span class="status"></span>
-
-            </div>
-
-
-        </div>
-
-
-        <div class="footer">
-
-            Panel de monitoreo ·
-            Enlaces directos M3U8
-
-        </div>
-
 
     </div>
 
 
-    <script>
+    <!-- RADIOS -->
 
-        function abrirStream(url, nombre) {
-
-
-            /*
-             * Detectamos si estamos en celular
-             */
-
-            const movil =
-                /Android|iPhone|iPad|iPod/i
-                .test(navigator.userAgent);
+    <div class="streams">
 
 
-            /*
-             * CELULAR
-             *
-             * Abrimos directamente el M3U8.
-             * Esto permite que el sistema/navegador
-             * utilice su reproductor compatible.
-             */
+        <!-- XTREMA -->
 
-            if (movil) {
+        <div
+            class="stream"
+            onclick="abrirStream(
+                'http://190.56.85.14:8081/xtrema/stream_abr/playlist.m3u8',
+                'Xtrema'
+            )"
+        >
 
-                window.location.href = url;
+            <div class="logo-box">
+                <img
+                    src="xtrema.png"
+                    alt="Xtrema"
+                >
+            </div>
 
-                return;
+            <div class="info">
 
-            }
+                <div class="name">
+                    Xtrema
+                </div>
 
+                <div class="type">
+                    Streaming M3U8
+                </div>
 
-            /*
-             * PC
-             *
-             * Abrimos una ventana independiente.
-             */
+                <div class="online">
+                    <span class="online-dot"></span>
+                    EN VIVO
+                </div>
 
-            const ancho = 900;
+            </div>
 
-            const alto = 600;
+            <div class="play">
+                ▶
+            </div>
 
-
-            const izquierda =
-                Math.max(
-                    0,
-                    (screen.width - ancho) / 2
-                );
-
-
-            const arriba =
-                Math.max(
-                    0,
-                    (screen.height - alto) / 2
-                );
-
-
-            const opciones =
-
-                "width=" + ancho +
-                ",height=" + alto +
-                ",left=" + izquierda +
-                ",top=" + arriba +
-                ",resizable=yes" +
-                ",scrollbars=yes" +
-                ",toolbar=no" +
-                ",menubar=no";
+        </div>
 
 
-            const ventana =
+        <!-- LA MARCA -->
 
-                window.open(
-                    url,
-                    "radio_" + nombre.replace(/\s/g, "_"),
-                    opciones
-                );
+        <div
+            class="stream"
+            onclick="abrirStream(
+                'http://190.56.85.14:8081/lamarca/stream_abr/playlist.m3u8',
+                'La Marca'
+            )"
+        >
+
+            <div class="logo-box">
+                <img
+                    src="lamarca.png"
+                    alt="La Marca"
+                >
+            </div>
+
+            <div class="info">
+
+                <div class="name">
+                    La Marca
+                </div>
+
+                <div class="type">
+                    Streaming M3U8
+                </div>
+
+                <div class="online">
+                    <span class="online-dot"></span>
+                    EN VIVO
+                </div>
+
+            </div>
+
+            <div class="play">
+                ▶
+            </div>
+
+        </div>
 
 
-            if (ventana) {
+        <!-- JOYA -->
 
-                ventana.focus();
+        <div
+            class="stream"
+            onclick="abrirStream(
+                'http://190.56.85.14:8081/joya/stream_abr/playlist.m3u8',
+                'Joya'
+            )"
+        >
 
-            }
+            <div class="logo-box">
+                <img
+                    src="joya.png"
+                    alt="Joya"
+                >
+            </div>
 
-            else {
+            <div class="info">
 
-                alert(
-                    "El navegador bloqueó la ventana emergente.\n\n" +
-                    "Permite las ventanas emergentes para este sitio."
-                );
+                <div class="name">
+                    Joya
+                </div>
 
-            }
+                <div class="type">
+                    Streaming M3U8
+                </div>
+
+                <div class="online">
+                    <span class="online-dot"></span>
+                    EN VIVO
+                </div>
+
+            </div>
+
+            <div class="play">
+                ▶
+            </div>
+
+        </div>
+
+
+        <!-- GALAXIA -->
+
+        <div
+            class="stream"
+            onclick="abrirStream(
+                'http://190.56.85.14:8081/galaxia/stream_abr/playlist.m3u8',
+                'Galaxia'
+            )"
+        >
+
+            <div class="logo-box">
+                <img
+                    src="galaxia.png"
+                    alt="Galaxia"
+                >
+            </div>
+
+            <div class="info">
+
+                <div class="name">
+                    Galaxia
+                </div>
+
+                <div class="type">
+                    Streaming M3U8
+                </div>
+
+                <div class="online">
+                    <span class="online-dot"></span>
+                    EN VIVO
+                </div>
+
+            </div>
+
+            <div class="play">
+                ▶
+            </div>
+
+        </div>
+
+
+        <!-- TROPICALIDA -->
+
+        <div
+            class="stream"
+            onclick="abrirStream(
+                'http://190.56.85.14:8081/tropicalida/stream_abr/playlist.m3u8',
+                'Tropicalida'
+            )"
+        >
+
+            <div class="logo-box">
+                <img
+                    src="tropicalida.png"
+                    alt="Tropicalida"
+                >
+            </div>
+
+            <div class="info">
+
+                <div class="name">
+                    Tropicalida
+                </div>
+
+                <div class="type">
+                    Streaming M3U8
+                </div>
+
+                <div class="online">
+                    <span class="online-dot"></span>
+                    EN VIVO
+                </div>
+
+            </div>
+
+            <div class="play">
+                ▶
+            </div>
+
+        </div>
+
+
+        <!-- ALFA -->
+
+        <div
+            class="stream"
+            onclick="abrirStream(
+                'http://190.56.85.14:8081/alfa/stream_abr/playlist.m3u8',
+                'Alfa'
+            )"
+        >
+
+            <div class="logo-box">
+                <img
+                    src="alfa.png"
+                    alt="Alfa"
+                >
+            </div>
+
+            <div class="info">
+
+                <div class="name">
+                    Alfa
+                </div>
+
+                <div class="type">
+                    Streaming M3U8
+                </div>
+
+                <div class="online">
+                    <span class="online-dot"></span>
+                    EN VIVO
+                </div>
+
+            </div>
+
+            <div class="play">
+                ▶
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="footer">
+
+        <strong>Central de Radios</strong>
+        &nbsp;·&nbsp;
+        Enlaces directos M3U8
+        &nbsp;·&nbsp;
+        Sistema de monitoreo
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ============================================================
+   ABRIR TRANSMISIÓN
+   ============================================================ */
+
+function abrirStream(url, nombre) {
+
+    /*
+     * Detectamos si el dispositivo es móvil.
+     */
+
+    const esMovil =
+        /Android|iPhone|iPad|iPod|Windows Phone/i.test(
+            navigator.userAgent
+        );
+
+
+    /* ========================================================
+       CELULAR
+       ======================================================== */
+
+    if (esMovil) {
+
+        /*
+         * En teléfonos no podemos controlar el tamaño de una
+         * ventana popup como en Windows.
+         *
+         * Intentamos abrir la transmisión en una nueva pestaña.
+         */
+
+        const nuevaVentana = window.open(
+            url,
+            '_blank'
+        );
+
+
+        /*
+         * Algunos navegadores móviles bloquean window.open().
+         *
+         * Si ocurre, navegamos directamente a la transmisión.
+         */
+
+        if (
+            !nuevaVentana ||
+            nuevaVentana.closed ||
+            typeof nuevaVentana.closed === 'undefined'
+        ) {
+
+            window.location.href = url;
 
         }
 
-    </script>
+        return;
+    }
 
+
+    /* ========================================================
+       PC
+       ======================================================== */
+
+    const ancho = 900;
+    const alto = 600;
+
+
+    /*
+     * Centrar popup en pantalla.
+     */
+
+    const izquierda =
+        Math.max(
+            0,
+            (screen.width - ancho) / 2
+        );
+
+    const arriba =
+        Math.max(
+            0,
+            (screen.height - alto) / 2
+        );
+
+
+    /*
+     * Nombre único para cada radio.
+     *
+     * Si vuelves a pulsar la misma radio, reutiliza
+     * la misma ventana.
+     */
+
+    const nombreVentana =
+        'radio_' +
+        nombre
+            .replace(/\s+/g, '_')
+            .replace(/[^a-zA-Z0-9_]/g, '');
+
+
+    /*
+     * Abrir popup.
+     */
+
+    const ventana = window.open(
+
+        url,
+
+        nombreVentana,
+
+        `
+        width=${ancho},
+        height=${alto},
+        left=${izquierda},
+        top=${arriba},
+        resizable=yes,
+        scrollbars=yes,
+        toolbar=no,
+        menubar=no,
+        location=no,
+        status=no
+        `
+
+    );
+
+
+    /*
+     * Llevar la ventana al frente.
+     */
+
+    if (ventana) {
+
+        ventana.focus();
+
+    }
+
+}
+
+</script>
 
 </body>
-
 </html>
