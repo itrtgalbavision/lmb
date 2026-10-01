@@ -3,139 +3,401 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Sonora HD</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <title>Streams M3U8</title>
+
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #0e1017;
-            color: #ffffff;
+            margin: 0;
+            min-height: 100vh;
+
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+
+            background:
+                radial-gradient(circle at top, #1c2633 0%, #0d1117 45%, #080b0f 100%);
+
+            font-family: Arial, Helvetica, sans-serif;
+            color: #ffffff;
         }
 
-        .card {
-            background-color: #171925;
-            padding: 35px 30px;
+        .container {
+            width: 92%;
+            max-width: 760px;
+
+            padding: 35px;
+
+            background: rgba(22, 27, 34, 0.94);
+
+            border: 1px solid #30363d;
             border-radius: 20px;
-            text-align: center;
-            width: 320px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
-        .card h2 {
-            margin: 0 0 5px 0;
-            color: #00e676;
-            font-size: 1.4rem;
+        h1 {
+            text-align: center;
+            margin: 0;
+
+            font-size: 30px;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            text-align: center;
+
+            color: #8b949e;
+
+            margin-top: 8px;
+            margin-bottom: 30px;
+
+            font-size: 14px;
+        }
+
+        .streams {
+            display: grid;
+
+            grid-template-columns: repeat(2, 1fr);
+
+            gap: 16px;
+        }
+
+        .stream {
+            position: relative;
+
+            display: flex;
+            align-items: center;
+
+            min-height: 95px;
+
+            padding: 15px 18px;
+
+            background: linear-gradient(
+                145deg,
+                #21262d,
+                #171b21
+            );
+
+            border: 1px solid #30363d;
+
+            border-radius: 15px;
+
+            text-decoration: none;
+
+            color: white;
+
+            overflow: hidden;
+
+            transition:
+                transform 0.25s ease,
+                border-color 0.25s ease,
+                box-shadow 0.25s ease,
+                background 0.25s ease;
+        }
+
+        .stream::before {
+            content: "";
+
+            position: absolute;
+
+            left: 0;
+            top: 0;
+            bottom: 0;
+
+            width: 3px;
+
+            background: #3fb950;
+
+            opacity: 0.7;
+
+            transition: opacity 0.25s ease;
+        }
+
+        .stream:hover {
+            transform: translateY(-4px);
+
+            border-color: #58a6ff;
+
+            background: linear-gradient(
+                145deg,
+                #292f36,
+                #1b222b
+            );
+
+            box-shadow:
+                0 12px 30px rgba(0, 0, 0, 0.35),
+                0 0 20px rgba(88, 166, 255, 0.08);
+        }
+
+        .stream:hover::before {
+            opacity: 1;
+        }
+
+        .radio-icon {
+            width: 65px;
+            height: 65px;
+
+            flex-shrink: 0;
+
+            object-fit: contain;
+
+            margin-right: 16px;
+
+            border-radius: 12px;
+
+            background: #0d1117;
+
+            padding: 5px;
+
+            border: 1px solid #30363d;
+
+            box-shadow:
+                0 5px 15px rgba(0, 0, 0, 0.35);
+
+            transition: transform 0.25s ease;
+        }
+
+        .stream:hover .radio-icon {
+            transform: scale(1.06);
+        }
+
+        .info {
+            flex: 1;
+        }
+
+        .name {
+            display: block;
+
+            font-size: 17px;
+
+            font-weight: bold;
+
+            margin-bottom: 6px;
+        }
+
+        .type {
+            display: block;
+
+            color: #8b949e;
+
+            font-size: 12px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
         }
 
         .status {
-            font-size: 0.85rem;
-            color: #8a8f9d;
-            margin-bottom: 25px;
+            width: 10px;
+            height: 10px;
+
+            flex-shrink: 0;
+
+            margin-left: 10px;
+
+            background: #3fb950;
+
+            border-radius: 50%;
+
+            box-shadow:
+                0 0 8px rgba(63, 185, 80, 0.8);
+
+            animation: pulse 2s infinite;
         }
 
-        .play-btn {
-            background-color: #00e676;
-            color: #000;
-            border: none;
-            width: 100%;
-            padding: 14px;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3);
-        }
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 5px rgba(63,185,80,0.5);
+            }
 
-        .play-btn:hover {
-            background-color: #00c853;
-            transform: scale(1.02);
-        }
+            50% {
+                box-shadow: 0 0 14px rgba(63,185,80,0.9);
+            }
 
-        audio { display: none; }
-    </style>
-</head>
-<body>
-
-    <div class="card">
-        <h2>Radio Sonora</h2>
-        <p style="margin: 0 0 10px 0; color: #ccc; font-size: 0.9rem;">Transmisión en Vivo</p>
-        <div id="status" class="status">Listo para conectar</div>
-
-        <button id="playBtn" class="play-btn">▶ Escuchar En Vivo</button>
-        <audio id="audioElement" crossorigin="anonymous"></audio>
-    </div>
-
-    <script>
-        // Tunneling directo a través de proxy seguro para librar el HTTPS de Cloudflare Pages
-        const targetUrl = 'http://190.56.85.14:8081/sonora/stream_abr/playlist.m3u8';
-        const secureStream = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
-
-        const audio = document.getElementById('audioElement');
-        const playBtn = document.getElementById('playBtn');
-        const status = document.getElementById('status');
-
-        let hls = null;
-        let isPlaying = false;
-
-        function togglePlay() {
-            if (!isPlaying) {
-                status.innerText = "Conectando señal...";
-                status.style.color = "#ffb74d";
-                
-                if (Hls.isSupported()) {
-                    if (hls) hls.destroy();
-
-                    hls = new Hls({
-                        enableWorker: true,
-                        lowLatencyMode: true
-                    });
-
-                    hls.loadSource(secureStream);
-                    hls.attachMedia(audio);
-
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        audio.play().then(() => {
-                            isPlaying = true;
-                            playBtn.innerText = "❚❚ Pausar";
-                            status.innerText = "● EN VIVO";
-                            status.style.color = "#00e676";
-                        }).catch(() => {
-                            status.innerText = "Haz clic de nuevo en Play";
-                        });
-                    });
-
-                    hls.on(Hls.Events.ERROR, (event, data) => {
-                        if (data.fatal) {
-                            status.innerText = "Error en la señal";
-                            status.style.color = "#ff5252";
-                        }
-                    });
-                } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-                    audio.src = targetUrl;
-                    audio.play();
-                    isPlaying = true;
-                    playBtn.innerText = "❚❚ Pausar";
-                    status.innerText = "● EN VIVO";
-                }
-            } else {
-                audio.pause();
-                if (hls) hls.destroy();
-                isPlaying = false;
-                playBtn.innerText = "▶ Escuchar En Vivo";
-                status.innerText = "Pausado";
-                status.style.color = "#8a8f9d";
+            100% {
+                box-shadow: 0 0 5px rgba(63,185,80,0.5);
             }
         }
 
-        playBtn.addEventListener('click', togglePlay);
-    </script>
+        .footer {
+            margin-top: 25px;
+
+            text-align: center;
+
+            color: #6e7681;
+
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+
+            .streams {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 25px 20px;
+            }
+
+            .radio-icon {
+                width: 58px;
+                height: 58px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Streams M3U8</h1>
+
+        <div class="subtitle">
+            Selecciona una estación para abrir el enlace directo
+        </div>
+
+        <div class="streams">
+
+            <!-- XTREMA -->
+            <a class="stream"
+               href="http://190.56.85.14:8081/xtrema/stream_abr/playlist.m3u8"
+               target="_blank">
+
+                <img
+                    src="xtrema.png"
+                    alt="Xtrema"
+                    class="radio-icon"
+                >
+
+                <div class="info">
+                    <span class="name">Xtrema</span>
+                    <span class="type">Streaming M3U8</span>
+                </div>
+
+                <span class="status"></span>
+
+            </a>
+
+
+            <!-- LA MARCA -->
+            <a class="stream"
+               href="http://190.56.85.14:8081/lamarca/stream_abr/playlist.m3u8"
+               target="_blank">
+
+                <img
+                    src="lamarca.png"
+                    alt="La Marca"
+                    class="radio-icon"
+                >
+
+                <div class="info">
+                    <span class="name">La Marca</span>
+                    <span class="type">Streaming M3U8</span>
+                </div>
+
+                <span class="status"></span>
+
+            </a>
+
+
+            <!-- JOYA -->
+            <a class="stream"
+               href="http://190.56.85.14:8081/joya/stream_abr/playlist.m3u8"
+               target="_blank">
+
+                <img
+                    src="joya.png"
+                    alt="Joya"
+                    class="radio-icon"
+                >
+
+                <div class="info">
+                    <span class="name">Joya</span>
+                    <span class="type">Streaming M3U8</span>
+                </div>
+
+                <span class="status"></span>
+
+            </a>
+
+
+            <!-- GALAXIA -->
+            <a class="stream"
+               href="http://190.56.85.14:8081/galaxia/stream_abr/playlist.m3u8"
+               target="_blank">
+
+                <img
+                    src="galaxia.png"
+                    alt="Galaxia"
+                    class="radio-icon"
+                >
+
+                <div class="info">
+                    <span class="name">Galaxia</span>
+                    <span class="type">Streaming M3U8</span>
+                </div>
+
+                <span class="status"></span>
+
+            </a>
+
+
+            <!-- TROPICALIDA -->
+            <a class="stream"
+               href="http://190.56.85.14:8081/tropicalida/stream_abr/playlist.m3u8"
+               target="_blank">
+
+                <img
+                    src="tropicalida.png"
+                    alt="Tropicalida"
+                    class="radio-icon"
+                >
+
+                <div class="info">
+                    <span class="name">Tropicalida</span>
+                    <span class="type">Streaming M3U8</span>
+                </div>
+
+                <span class="status"></span>
+
+            </a>
+
+
+            <!-- ALFA -->
+            <a class="stream"
+               href="http://190.56.85.14:8081/alfa/stream_abr/playlist.m3u8"
+               target="_blank">
+
+                <img
+                    src="alfa.png"
+                    alt="Alfa"
+                    class="radio-icon"
+                >
+
+                <div class="info">
+                    <span class="name">Alfa</span>
+                    <span class="type">Streaming M3U8</span>
+                </div>
+
+                <span class="status"></span>
+
+            </a>
+
+        </div>
+
+        <div class="footer">
+            Panel de monitoreo · Enlaces directos M3U8
+        </div>
+
+    </div>
 
 </body>
 </html>
