@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -63,9 +64,7 @@
 
         .streams {
             display: grid;
-
             grid-template-columns: repeat(2, 1fr);
-
             gap: 16px;
         }
 
@@ -94,6 +93,8 @@
             color: white;
 
             overflow: hidden;
+
+            cursor: pointer;
 
             transition:
                 transform 0.25s ease,
@@ -269,7 +270,7 @@
             <!-- XTREMA -->
             <a class="stream"
                href="http://190.56.85.14:8081/xtrema/stream_abr/playlist.m3u8"
-               target="_blank">
+               onclick="abrirPopup(this.href, 'popupXtrema'); return false;">
 
                 <img
                     src="xtrema.png"
@@ -290,7 +291,7 @@
             <!-- LA MARCA -->
             <a class="stream"
                href="http://190.56.85.14:8081/lamarca/stream_abr/playlist.m3u8"
-               target="_blank">
+               onclick="abrirPopup(this.href, 'popupLaMarca'); return false;">
 
                 <img
                     src="lamarca.png"
@@ -311,7 +312,7 @@
             <!-- JOYA -->
             <a class="stream"
                href="http://190.56.85.14:8081/joya/stream_abr/playlist.m3u8"
-               target="_blank">
+               onclick="abrirPopup(this.href, 'popupJoya'); return false;">
 
                 <img
                     src="joya.png"
@@ -332,7 +333,7 @@
             <!-- GALAXIA -->
             <a class="stream"
                href="http://190.56.85.14:8081/galaxia/stream_abr/playlist.m3u8"
-               target="_blank">
+               onclick="abrirPopup(this.href, 'popupGalaxia'); return false;">
 
                 <img
                     src="galaxia.png"
@@ -353,7 +354,7 @@
             <!-- TROPICALIDA -->
             <a class="stream"
                href="http://190.56.85.14:8081/tropicalida/stream_abr/playlist.m3u8"
-               target="_blank">
+               onclick="abrirPopup(this.href, 'popupTropicalida'); return false;">
 
                 <img
                     src="tropicalida.png"
@@ -374,7 +375,7 @@
             <!-- ALFA -->
             <a class="stream"
                href="http://190.56.85.14:8081/alfa/stream_abr/playlist.m3u8"
-               target="_blank">
+               onclick="abrirPopup(this.href, 'popupAlfa'); return false;">
 
                 <img
                     src="alfa.png"
@@ -399,5 +400,50 @@
 
     </div>
 
+
+    <script>
+
+        function abrirPopup(url, nombre) {
+
+            const ancho = 900;
+            const alto = 600;
+
+            const izquierda =
+                (screen.width - ancho) / 2;
+
+            const arriba =
+                (screen.height - alto) / 2;
+
+            const opciones =
+                "width=" + ancho +
+                ",height=" + alto +
+                ",left=" + izquierda +
+                ",top=" + arriba +
+                ",resizable=yes" +
+                ",scrollbars=yes" +
+                ",toolbar=no" +
+                ",menubar=no" +
+                ",location=yes" +
+                ",status=no";
+
+            const popup = window.open(
+                url,
+                nombre,
+                opciones
+            );
+
+            if (popup) {
+                popup.focus();
+            } else {
+                alert(
+                    "El navegador bloqueó la ventana emergente.\n\n" +
+                    "Permite los pop-ups para este sitio."
+                );
+            }
+        }
+
+    </script>
+
 </body>
 </html>
+```
