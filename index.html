@@ -6,6 +6,9 @@
 
     <title>Streams CENTRAL DE RADIOS</title>
 
+    <!-- HLS.js para reproducir M3U8 -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -25,6 +28,10 @@
             font-family: Arial, Helvetica, sans-serif;
             color: #ffffff;
         }
+
+        /* ==============================
+           PANEL PRINCIPAL
+        ============================== */
 
         .container {
             width: 92%;
@@ -61,9 +68,15 @@
             font-size: 14px;
         }
 
+        /* ==============================
+           RADIOS
+        ============================== */
+
         .streams {
             display: grid;
+
             grid-template-columns: repeat(2, 1fr);
+
             gap: 16px;
         }
 
@@ -86,8 +99,6 @@
             border: 1px solid #30363d;
 
             border-radius: 15px;
-
-            text-decoration: none;
 
             color: white;
 
@@ -116,8 +127,6 @@
             background: #3fb950;
 
             opacity: 0.7;
-
-            transition: opacity 0.25s ease;
         }
 
         .stream:hover {
@@ -134,10 +143,6 @@
             box-shadow:
                 0 12px 30px rgba(0, 0, 0, 0.35),
                 0 0 20px rgba(88, 166, 255, 0.08);
-        }
-
-        .stream:hover::before {
-            opacity: 1;
         }
 
         .radio-icon {
@@ -213,6 +218,7 @@
         }
 
         @keyframes pulse {
+
             0% {
                 box-shadow: 0 0 5px rgba(63,185,80,0.5);
             }
@@ -224,6 +230,7 @@
             100% {
                 box-shadow: 0 0 5px rgba(63,185,80,0.5);
             }
+
         }
 
         .footer {
@@ -236,40 +243,378 @@
             font-size: 12px;
         }
 
+
+        /* ==================================================
+           REPRODUCTOR
+        ================================================== */
+
+        .player-overlay {
+
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 9999;
+
+            display: none;
+
+            justify-content: center;
+            align-items: center;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    #182431,
+                    #080b0f 70%
+                );
+
+            padding: 20px;
+        }
+
+        .player-overlay.active {
+            display: flex;
+        }
+
+        .player {
+
+            width: 100%;
+            max-width: 850px;
+
+            background: rgba(22, 27, 34, 0.97);
+
+            border: 1px solid #30363d;
+
+            border-radius: 22px;
+
+            padding: 35px;
+
+            box-shadow:
+                0 30px 80px rgba(0,0,0,0.7);
+
+            text-align: center;
+
+            position: relative;
+        }
+
+        .close-player {
+
+            position: absolute;
+
+            top: 15px;
+            right: 15px;
+
+            width: 42px;
+            height: 42px;
+
+            border: 1px solid #30363d;
+
+            border-radius: 50%;
+
+            background: #21262d;
+
+            color: white;
+
+            font-size: 22px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .close-player:hover {
+
+            background: #da3633;
+
+            border-color: #da3633;
+
+        }
+
+        .player-logo {
+
+            width: 140px;
+            height: 140px;
+
+            object-fit: contain;
+
+            background: #0d1117;
+
+            border-radius: 22px;
+
+            padding: 10px;
+
+            border: 1px solid #30363d;
+
+            box-shadow:
+                0 10px 30px rgba(0,0,0,0.45);
+
+            margin-bottom: 20px;
+        }
+
+        .player-name {
+
+            margin: 0;
+
+            font-size: 30px;
+
+            letter-spacing: 1px;
+        }
+
+        .player-status {
+
+            margin-top: 10px;
+
+            color: #8b949e;
+
+            font-size: 14px;
+        }
+
+        .live-dot {
+
+            display: inline-block;
+
+            width: 9px;
+            height: 9px;
+
+            background: #3fb950;
+
+            border-radius: 50%;
+
+            margin-right: 7px;
+
+            box-shadow:
+                0 0 10px #3fb950;
+        }
+
+        audio {
+
+            width: 100%;
+
+            margin-top: 30px;
+
+            height: 55px;
+        }
+
+        .player-url {
+
+            margin-top: 20px;
+
+            color: #6e7681;
+
+            font-size: 11px;
+
+            word-break: break-all;
+        }
+
+        .fullscreen-btn {
+
+            margin-top: 20px;
+
+            padding: 12px 22px;
+
+            border-radius: 10px;
+
+            border: 1px solid #30363d;
+
+            background: #21262d;
+
+            color: white;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .fullscreen-btn:hover {
+
+            border-color: #58a6ff;
+
+            background: #292f36;
+
+        }
+
+
+        /* ==================================================
+           MOVIL
+        ================================================== */
+
         @media (max-width: 600px) {
 
-            .streams {
-                grid-template-columns: 1fr;
+            body {
+                align-items: flex-start;
+                padding-top: 25px;
             }
 
             .container {
-                padding: 25px 20px;
+
+                width: 94%;
+
+                padding: 25px 18px;
+
+                border-radius: 18px;
+
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+                margin-bottom: 22px;
+            }
+
+            .streams {
+
+                grid-template-columns: 1fr;
+
+                gap: 12px;
+
+            }
+
+            .stream {
+
+                min-height: 82px;
+
+                padding: 12px 14px;
+
             }
 
             .radio-icon {
-                width: 58px;
-                height: 58px;
+
+                width: 55px;
+                height: 55px;
+
+                margin-right: 13px;
+
             }
+
+            .name {
+                font-size: 16px;
+            }
+
+            .type {
+                font-size: 10px;
+            }
+
+            /* Reproductor móvil */
+
+            .player-overlay {
+
+                padding: 0;
+
+                align-items: stretch;
+
+            }
+
+            .player {
+
+                max-width: none;
+
+                min-height: 100vh;
+
+                border-radius: 0;
+
+                border: none;
+
+                padding:
+
+                    70px
+
+                    25px
+
+                    30px;
+
+                display: flex;
+
+                flex-direction: column;
+
+                justify-content: center;
+
+            }
+
+            .close-player {
+
+                top: 18px;
+                right: 18px;
+
+                width: 46px;
+                height: 46px;
+
+                font-size: 24px;
+
+            }
+
+            .player-logo {
+
+                width: 160px;
+                height: 160px;
+
+                margin-left: auto;
+                margin-right: auto;
+
+            }
+
+            .player-name {
+
+                font-size: 28px;
+
+            }
+
+            audio {
+
+                height: 55px;
+
+                margin-top: 35px;
+
+            }
+
+            .fullscreen-btn {
+
+                width: 100%;
+
+                padding: 15px;
+
+                font-size: 15px;
+
+            }
+
+            .player-url {
+
+                display: none;
+
+            }
+
         }
     </style>
 </head>
 
 <body>
 
+
+    <!-- ==================================================
+         PANEL PRINCIPAL
+    ================================================== -->
+
     <div class="container">
 
         <h1>Streams CENTRAL DE RADIOS</h1>
 
         <div class="subtitle">
-            Selecciona una estación para abrir el enlace directo
+            Selecciona una estación para reproducir
         </div>
+
 
         <div class="streams">
 
+
             <!-- XTREMA -->
-            <a class="stream"
-               href="http://190.56.85.14:8081/xtrema/stream_abr/playlist.m3u8"
-               onclick="abrirPopup(this.href, 'popupXtrema'); return false;">
+
+            <div class="stream"
+                 onclick="abrirRadio(
+                    'Xtrema',
+                    'xtrema.png',
+                    'http://190.56.85.14:8081/xtrema/stream_abr/playlist.m3u8'
+                 )">
 
                 <img
                     src="xtrema.png"
@@ -278,19 +623,30 @@
                 >
 
                 <div class="info">
-                    <span class="name">Xtrema</span>
-                    <span class="type">Streaming M3U8</span>
+
+                    <span class="name">
+                        Xtrema
+                    </span>
+
+                    <span class="type">
+                        Streaming M3U8
+                    </span>
+
                 </div>
 
                 <span class="status"></span>
 
-            </a>
+            </div>
 
 
             <!-- LA MARCA -->
-            <a class="stream"
-               href="http://190.56.85.14:8081/lamarca/stream_abr/playlist.m3u8"
-               onclick="abrirPopup(this.href, 'popupLaMarca'); return false;">
+
+            <div class="stream"
+                 onclick="abrirRadio(
+                    'La Marca',
+                    'lamarca.png',
+                    'http://190.56.85.14:8081/lamarca/stream_abr/playlist.m3u8'
+                 )">
 
                 <img
                     src="lamarca.png"
@@ -299,19 +655,30 @@
                 >
 
                 <div class="info">
-                    <span class="name">La Marca</span>
-                    <span class="type">Streaming M3U8</span>
+
+                    <span class="name">
+                        La Marca
+                    </span>
+
+                    <span class="type">
+                        Streaming M3U8
+                    </span>
+
                 </div>
 
                 <span class="status"></span>
 
-            </a>
+            </div>
 
 
             <!-- JOYA -->
-            <a class="stream"
-               href="http://190.56.85.14:8081/joya/stream_abr/playlist.m3u8"
-               onclick="abrirPopup(this.href, 'popupJoya'); return false;">
+
+            <div class="stream"
+                 onclick="abrirRadio(
+                    'Joya',
+                    'joya.png',
+                    'http://190.56.85.14:8081/joya/stream_abr/playlist.m3u8'
+                 )">
 
                 <img
                     src="joya.png"
@@ -320,19 +687,30 @@
                 >
 
                 <div class="info">
-                    <span class="name">Joya</span>
-                    <span class="type">Streaming M3U8</span>
+
+                    <span class="name">
+                        Joya
+                    </span>
+
+                    <span class="type">
+                        Streaming M3U8
+                    </span>
+
                 </div>
 
                 <span class="status"></span>
 
-            </a>
+            </div>
 
 
             <!-- GALAXIA -->
-            <a class="stream"
-               href="http://190.56.85.14:8081/galaxia/stream_abr/playlist.m3u8"
-               onclick="abrirPopup(this.href, 'popupGalaxia'); return false;">
+
+            <div class="stream"
+                 onclick="abrirRadio(
+                    'Galaxia',
+                    'galaxia.png',
+                    'http://190.56.85.14:8081/galaxia/stream_abr/playlist.m3u8'
+                 )">
 
                 <img
                     src="galaxia.png"
@@ -341,19 +719,30 @@
                 >
 
                 <div class="info">
-                    <span class="name">Galaxia</span>
-                    <span class="type">Streaming M3U8</span>
+
+                    <span class="name">
+                        Galaxia
+                    </span>
+
+                    <span class="type">
+                        Streaming M3U8
+                    </span>
+
                 </div>
 
                 <span class="status"></span>
 
-            </a>
+            </div>
 
 
             <!-- TROPICALIDA -->
-            <a class="stream"
-               href="http://190.56.85.14:8081/tropicalida/stream_abr/playlist.m3u8"
-               onclick="abrirPopup(this.href, 'popupTropicalida'); return false;">
+
+            <div class="stream"
+                 onclick="abrirRadio(
+                    'Tropicalida',
+                    'tropicalida.png',
+                    'http://190.56.85.14:8081/tropicalida/stream_abr/playlist.m3u8'
+                 )">
 
                 <img
                     src="tropicalida.png"
@@ -362,19 +751,30 @@
                 >
 
                 <div class="info">
-                    <span class="name">Tropicalida</span>
-                    <span class="type">Streaming M3U8</span>
+
+                    <span class="name">
+                        Tropicalida
+                    </span>
+
+                    <span class="type">
+                        Streaming M3U8
+                    </span>
+
                 </div>
 
                 <span class="status"></span>
 
-            </a>
+            </div>
 
 
             <!-- ALFA -->
-            <a class="stream"
-               href="http://190.56.85.14:8081/alfa/stream_abr/playlist.m3u8"
-               onclick="abrirPopup(this.href, 'popupAlfa'); return false;">
+
+            <div class="stream"
+                 onclick="abrirRadio(
+                    'Alfa',
+                    'alfa.png',
+                    'http://190.56.85.14:8081/alfa/stream_abr/playlist.m3u8'
+                 )">
 
                 <img
                     src="alfa.png"
@@ -383,18 +783,101 @@
                 >
 
                 <div class="info">
-                    <span class="name">Alfa</span>
-                    <span class="type">Streaming M3U8</span>
+
+                    <span class="name">
+                        Alfa
+                    </span>
+
+                    <span class="type">
+                        Streaming M3U8
+                    </span>
+
                 </div>
 
                 <span class="status"></span>
 
-            </a>
+            </div>
+
 
         </div>
 
+
         <div class="footer">
-            Panel de monitoreo · Enlaces directos
+            Panel de monitoreo · Streaming M3U8
+        </div>
+
+    </div>
+
+
+    <!-- ==================================================
+         REPRODUCTOR
+    ================================================== -->
+
+    <div
+        id="playerOverlay"
+        class="player-overlay"
+    >
+
+        <div class="player">
+
+
+            <button
+                class="close-player"
+                onclick="cerrarRadio()"
+                aria-label="Cerrar"
+            >
+                ×
+            </button>
+
+
+            <img
+                id="playerLogo"
+                class="player-logo"
+                src=""
+                alt=""
+            >
+
+
+            <h2
+                id="playerName"
+                class="player-name"
+            >
+                Radio
+            </h2>
+
+
+            <div
+                id="playerStatus"
+                class="player-status"
+            >
+                <span class="live-dot"></span>
+                Preparando transmisión...
+            </div>
+
+
+            <audio
+                id="audioPlayer"
+                controls
+                playsinline
+            >
+            </audio>
+
+
+            <button
+                class="fullscreen-btn"
+                onclick="pantallaCompleta()"
+            >
+                ⛶ Pantalla completa
+            </button>
+
+
+            <div
+                id="playerUrl"
+                class="player-url"
+            >
+            </div>
+
+
         </div>
 
     </div>
@@ -402,44 +885,244 @@
 
     <script>
 
-        function abrirPopup(url, nombre) {
+        let hls = null;
 
-            const ancho = 900;
-            const alto = 600;
 
-            const izquierda =
-                (screen.width - ancho) / 2;
+        /* ==================================================
+           ABRIR RADIO
+        ================================================== */
 
-            const arriba =
-                (screen.height - alto) / 2;
+        function abrirRadio(nombre, logo, url) {
 
-            const opciones =
-                "width=" + ancho +
-                ",height=" + alto +
-                ",left=" + izquierda +
-                ",top=" + arriba +
-                ",resizable=yes" +
-                ",scrollbars=yes" +
-                ",toolbar=no" +
-                ",menubar=no" +
-                ",location=yes" +
-                ",status=no";
+            const overlay =
+                document.getElementById("playerOverlay");
 
-            const popup = window.open(
-                url,
-                nombre,
-                opciones
-            );
+            const playerLogo =
+                document.getElementById("playerLogo");
 
-            if (popup) {
-                popup.focus();
-            } else {
-                alert(
-                    "El navegador bloqueó la ventana emergente.\n\n" +
-                    "Permite los pop-ups para este sitio."
-                );
+            const playerName =
+                document.getElementById("playerName");
+
+            const playerStatus =
+                document.getElementById("playerStatus");
+
+            const audio =
+                document.getElementById("audioPlayer");
+
+            const playerUrl =
+                document.getElementById("playerUrl");
+
+
+            /* Mostrar reproductor */
+
+            overlay.classList.add("active");
+
+
+            /* Información */
+
+            playerLogo.src = logo;
+
+            playerLogo.alt = nombre;
+
+            playerName.textContent = nombre;
+
+            playerUrl.textContent = url;
+
+            playerStatus.innerHTML =
+                '<span class="live-dot"></span>' +
+                'Conectando con la transmisión...';
+
+
+            /* Detener reproducción anterior */
+
+            if (hls) {
+
+                hls.destroy();
+
+                hls = null;
+
             }
+
+            audio.pause();
+
+            audio.removeAttribute("src");
+
+            audio.load();
+
+
+            /* ==================================================
+               HLS.JS
+            ================================================== */
+
+            if (Hls.isSupported()) {
+
+                hls = new Hls({
+
+                    enableWorker: true,
+
+                    lowLatencyMode: true,
+
+                    backBufferLength: 30
+
+                });
+
+
+                hls.loadSource(url);
+
+                hls.attachMedia(audio);
+
+
+                hls.on(
+                    Hls.Events.MANIFEST_PARSED,
+                    function() {
+
+                        playerStatus.innerHTML =
+                            '<span class="live-dot"></span>' +
+                            'EN VIVO · Conectado';
+
+                        audio.play()
+                            .catch(() => {
+
+                                playerStatus.innerHTML =
+                                    '<span class="live-dot"></span>' +
+                                    'Listo para reproducir';
+
+                            });
+
+                    }
+                );
+
+
+                hls.on(
+                    Hls.Events.ERROR,
+                    function(event, data) {
+
+                        if (data.fatal) {
+
+                            playerStatus.innerHTML =
+                                '⚠ No se pudo conectar con la transmisión';
+
+                        }
+
+                    }
+                );
+
+            }
+
+            /* ==================================================
+               SAFARI / IOS
+            ================================================== */
+
+            else if (
+                audio.canPlayType(
+                    "application/vnd.apple.mpegurl"
+                )
+            ) {
+
+                audio.src = url;
+
+                audio.addEventListener(
+                    "loadedmetadata",
+                    function() {
+
+                        playerStatus.innerHTML =
+                            '<span class="live-dot"></span>' +
+                            'EN VIVO · Conectado';
+
+                        audio.play()
+                            .catch(() => {});
+
+                    },
+                    { once: true }
+                );
+
+            }
+
+            else {
+
+                playerStatus.innerHTML =
+                    "⚠ Este navegador no soporta reproducción HLS.";
+
+            }
+
         }
+
+
+        /* ==================================================
+           CERRAR RADIO
+        ================================================== */
+
+        function cerrarRadio() {
+
+            const overlay =
+                document.getElementById("playerOverlay");
+
+            const audio =
+                document.getElementById("audioPlayer");
+
+
+            audio.pause();
+
+            audio.removeAttribute("src");
+
+            audio.load();
+
+
+            if (hls) {
+
+                hls.destroy();
+
+                hls = null;
+
+            }
+
+
+            overlay.classList.remove("active");
+
+        }
+
+
+        /* ==================================================
+           PANTALLA COMPLETA
+        ================================================== */
+
+        function pantallaCompleta() {
+
+            const player =
+                document.querySelector(".player");
+
+
+            if (player.requestFullscreen) {
+
+                player.requestFullscreen();
+
+            }
+
+            else if (player.webkitRequestFullscreen) {
+
+                player.webkitRequestFullscreen();
+
+            }
+
+        }
+
+
+        /* ==================================================
+           ESCAPE PARA CERRAR
+        ================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (event.key === "Escape") {
+
+                    cerrarRadio();
+
+                }
+
+            }
+        );
 
     </script>
 
